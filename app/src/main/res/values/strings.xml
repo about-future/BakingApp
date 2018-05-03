@@ -1,0 +1,12 @@
+<resources>
+
+    <string name="app_name">Baking App</string>
+    <string name="no_internet">No internet connection.\nNo recipes, right?</string>
+    <string name="loading">Loading&#8230;</string>
+    <string name="no_connection_icon">No connection icon</string>
+    <string name="servings">Serving for %1$d people.</string>
+    <string name="title_step_list">Steps</string>
+    <string name="title_step_detail">Step Detail</string>
+    <string name="error_message">No recipe details available</string>
+
+</resources>
