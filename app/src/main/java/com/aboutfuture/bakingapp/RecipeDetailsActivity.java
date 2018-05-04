@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.MenuItem;
 import android.widget.Toast;
 
@@ -28,6 +29,8 @@ public class RecipeDetailsActivity extends AppCompatActivity implements MasterRe
     @BindString(R.string.error_message)
     String errorMsg;
 
+    private boolean mTwoPane;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -40,35 +43,48 @@ public class RecipeDetailsActivity extends AppCompatActivity implements MasterRe
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        if (savedInstanceState == null) {
-            Intent intent = getIntent();
-            if (intent != null) {
-                if (intent.hasExtra(RecipesActivity.RECIPE_KEY)) {
-                    mRecipe = intent.getParcelableExtra(RecipesActivity.RECIPE_KEY);
-                    setTitle(mRecipe.getName());
+//        if (findViewById(R.id.step_details_container) != null) {
+//            mTwoPane = true;
 
-//                    mRecipeSteps = new ArrayList<>();
-//                    mRecipeSteps.add(new Step(0, getString(R.string.ingredients), null, null, null));
-//                    mRecipeSteps.addAll(mRecipe.getSteps());
+            if (savedInstanceState == null) {
+                Intent intent = getIntent();
+                if (intent != null) {
+                    if (intent.hasExtra(RecipesActivity.RECIPE_KEY)) {
+                        mRecipe = intent.getParcelableExtra(RecipesActivity.RECIPE_KEY);
+                        setTitle(mRecipe.getName());
 
-                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    mRecipeSteps = new ArrayList<>();
+                    mRecipeSteps.add(new Step(0, getString(R.string.ingredients), null, null, null));
+                    mRecipeSteps.addAll(mRecipe.getSteps());
 
-                    MasterRecipeFragment masterFragment = new MasterRecipeFragment();
-                    masterFragment.setRecipe(mRecipe);
-                    fragmentManager.beginTransaction()
-                            .add(R.id.master_container, masterFragment)
-                            .commit();
+                        FragmentManager fragmentManager = getSupportFragmentManager();
+
+                        MasterRecipeFragment masterFragment = new MasterRecipeFragment();
+                        masterFragment.setSteps(mRecipeSteps);
+                        fragmentManager.beginTransaction()
+                                .add(R.id.master_container, masterFragment)
+                                .commit();
+
+//                        StepDetailsFragment stepFragment = new StepDetailsFragment();
+//                        stepFragment.setSteps(mRecipeSteps);
+//                        fragmentManager.beginTransaction()
+//                                .add(R.id.step_details_container, stepFragment)
+//                                .commit();
+                    }
+                } else {
+                    closeOnError(errorMsg);
                 }
-            } else {
-                closeOnError(errorMsg);
             }
-        }
+
+//        } else {
+//            mTwoPane = false;
+//        }
     }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putParcelable(RecipesActivity.RECIPE_KEY, mRecipe);
-        outState.putParcelableArrayList(RecipesActivity.RECIPE_KEY, mRecipeSteps);
+        outState.putParcelableArrayList(RecipesActivity.RECIPE_STEP_KEY, mRecipeSteps);
 
         super.onSaveInstanceState(outState);
     }
@@ -82,9 +98,10 @@ public class RecipeDetailsActivity extends AppCompatActivity implements MasterRe
                     setTitle(mRecipe.getName());
                 }
             }
-//            if (savedInstanceState.containsKey(RECIPE_STEPS_KEY)) {
-//                mRecipeSteps = savedInstanceState.getParcelableArrayList(RECIPE_STEPS_KEY);
-//            }
+
+            if (savedInstanceState.containsKey(RecipesActivity.RECIPE_STEP_KEY)) {
+                mRecipeSteps = savedInstanceState.getParcelableArrayList(RecipesActivity.RECIPE_STEP_KEY);
+            }
         }
 
         super.onRestoreInstanceState(savedInstanceState);
@@ -97,7 +114,7 @@ public class RecipeDetailsActivity extends AppCompatActivity implements MasterRe
 
     private void toastThis(String toastMessage) {
         if (mToast != null) mToast.cancel();
-        mToast = Toast.makeText(this, toastMessage, Toast.LENGTH_LONG);
+        mToast = Toast.makeText(this, toastMessage, Toast.LENGTH_SHORT);
         mToast.show();
     }
 
@@ -115,15 +132,34 @@ public class RecipeDetailsActivity extends AppCompatActivity implements MasterRe
 
     @Override
     public void onStepSelected(int position) {
+        if (mTwoPane) {
+            if (!TextUtils.isEmpty(mRecipe.getSteps().get(position).getVideoURL())){
+                //load video fragment
+            } else {
+                // hide the video part
+            }
+
+            StepDetailsFragment newFragment = new StepDetailsFragment();
+            newFragment.setSteps(mRecipeSteps);
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.step_details_container, newFragment)
+                    .commit();
+        } else {
+            Intent intent = new Intent(this, StepDetailsActivity.class);
+            intent.putExtra(RecipesActivity.RECIPE_STEP_KEY, mRecipeSteps);
+            intent.putExtra(RecipesActivity.POSITION_KEY, position);
+            startActivity(intent);
+        }
+
         //Toast.makeText(this, "Position: " + position, Toast.LENGTH_SHORT).show();
 
 //        if (position == 0) {
 //
 //        } else {
-            Intent intent = new Intent(this, StepDetailsActivity.class);
-            intent.putExtra(RecipesActivity.RECIPE_KEY, mRecipe);
-            intent.putExtra(RecipesActivity.POSITION_KEY, position);
-            startActivity(intent);
+//            Intent intent = new Intent(this, StepDetailsActivity.class);
+//            intent.putExtra(RecipesActivity.RECIPE_KEY, mRecipe);
+//            intent.putExtra(RecipesActivity.POSITION_KEY, position);
+//            startActivity(intent);
         //}
     }
 }

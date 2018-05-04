@@ -16,15 +16,15 @@ import java.util.ArrayList;
 public class MasterRecipeAdapter extends BaseAdapter {
 
     private Context mContext;
-    private Recipe mRecipe;
+    private ArrayList<Step> mSteps;
 
-    public MasterRecipeAdapter(Context context, Recipe recipe) {
+    public MasterRecipeAdapter(Context context, ArrayList<Step> steps) {
         mContext = context;
-        mRecipe = recipe;
+        mSteps = steps;
     }
 
     @Override
-    public int getCount() { return mRecipe.getSteps().size() + 1; }
+    public int getCount() { return mSteps.size(); }
 
     @Override
     public Object getItem(int i) { return null; }
@@ -47,12 +47,12 @@ public class MasterRecipeAdapter extends BaseAdapter {
         if (position == 0) {
             stepDescriptionTextView.setText(mContext.getString(R.string.ingredients));
         } else if (position == 1) {
-            stepDescriptionTextView.setText(mRecipe.getSteps().get(position - 1).getShortDescription());
+            stepDescriptionTextView.setText(mSteps.get(position).getShortDescription());
         } else {
             stepDescriptionTextView.setText(TextUtils.concat(
                     String.valueOf(position - 1),
                     ". ",
-                    mRecipe.getSteps().get(position - 1).getShortDescription()));
+                    mSteps.get(position).getShortDescription()));
         }
 
         return stepDescriptionTextView;

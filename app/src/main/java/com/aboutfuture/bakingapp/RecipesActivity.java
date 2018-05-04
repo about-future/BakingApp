@@ -44,7 +44,7 @@ public class RecipesActivity extends AppCompatActivity implements
     public static final String RECIPE_NAME_KEY = "recipe_name";
     public static final String INGREDIENTS_LIST_KEY = "ingredients_list";
     public static final String STEPS_LIST_KEY = "steps_list";
-    public static final String RECIPE_STEPS_KEY = "recipe_steps";
+    public static final String RECIPE_STEP_KEY = "recipe_step";
 
     @BindView(R.id.recipes_rv)
     RecyclerView mRecipesRecyclerView;

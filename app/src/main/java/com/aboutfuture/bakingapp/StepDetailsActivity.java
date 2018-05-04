@@ -13,7 +13,7 @@ import java.util.ArrayList;
 
 public class StepDetailsActivity extends AppCompatActivity {
 
-    private Recipe mRecipe;
+    private ArrayList<Step> mSteps;
     private int mPosition;
 
     @Override
@@ -23,14 +23,14 @@ public class StepDetailsActivity extends AppCompatActivity {
 
         if (savedInstanceState == null) {
 
-            mRecipe = getIntent().getParcelableExtra(RecipesActivity.RECIPE_KEY);
+            mSteps = getIntent().getParcelableArrayListExtra(RecipesActivity.RECIPE_STEP_KEY);
             mPosition = getIntent().getIntExtra(RecipesActivity.POSITION_KEY, 1);
             //Log.v("STEP " + mStep.getId(), mStep.getDescription());
 
             FragmentManager fragmentManager = getSupportFragmentManager();
 
             StepDetailsFragment stepFragment = new StepDetailsFragment();
-            stepFragment.setSteps(mRecipe);
+            stepFragment.setSteps(mSteps);
             stepFragment.setPosition(mPosition);
             fragmentManager.beginTransaction()
                     .add(R.id.step_details_container, stepFragment)

@@ -21,7 +21,7 @@ import java.util.ArrayList;
 
 public class MasterRecipeFragment extends Fragment {
 
-    private Recipe mRecipe;
+    private ArrayList<Step> mSteps;
 
     private OnStepClickListener mCallback;
 
@@ -48,14 +48,14 @@ public class MasterRecipeFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            mRecipe = savedInstanceState.getParcelable(RecipesActivity.RECIPE_KEY);
+            mSteps = savedInstanceState.getParcelableArrayList(RecipesActivity.RECIPE_STEP_KEY);
         }
 
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_master_recipe, container, false);
         ListView listView = rootView.findViewById(R.id.recipe_steps_list_view);
 
-        MasterRecipeAdapter mAdapter = new MasterRecipeAdapter(getContext(), mRecipe);
+        MasterRecipeAdapter mAdapter = new MasterRecipeAdapter(getContext(), mSteps);
         listView.setAdapter(mAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -68,12 +68,12 @@ public class MasterRecipeFragment extends Fragment {
         return rootView;
     }
 
-    public void setRecipe(Recipe recipe) {
-        mRecipe = recipe;
+    public void setSteps(ArrayList<Step> steps) {
+        mSteps = steps;
     }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
-        outState.putParcelable(RecipesActivity.RECIPE_KEY, mRecipe);
+        outState.putParcelableArrayList(RecipesActivity.RECIPE_STEP_KEY, mSteps);
     }
 }
