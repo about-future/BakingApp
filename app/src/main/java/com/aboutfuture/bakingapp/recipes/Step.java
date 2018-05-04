@@ -17,7 +17,7 @@ public class Step implements Parcelable {
     @SerializedName("thumbnailURL")
     private String thumbnailURL;
 
-    private Step(int id, String shortDescription, String description, String videoURL, String thumbnailURL) {
+    public Step(int id, String shortDescription, String description, String videoURL, String thumbnailURL) {
         this.id = id;
         this.shortDescription = shortDescription;
         this.description = description;
@@ -58,4 +58,10 @@ public class Step implements Parcelable {
         @Override
         public Step[] newArray(int size) { return new Step[size]; }
     };
+
+    public int getId() { return id; }
+    public String getShortDescription() { return shortDescription; }
+    public String getDescription() { return description; }
+    public String getVideoURL() { return videoURL; }
+    public String getThumbnailURL() { return thumbnailURL; }
 }
