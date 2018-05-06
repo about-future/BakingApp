@@ -1,9 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ListView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/recipe_steps_list_view"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_gravity="top"
-    android:divider="@color/white"
-    android:dividerHeight="1dp" />
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical">
+
+    <android.support.v7.widget.CardView
+        android:background="@color/colorPrimaryDark"
+        android:layout_width="match_parent"
+        android:layout_height="250dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="8dp">
+
+        <TextView
+            android:id="@+id/ingredients_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:fontFamily="sans-serif-condensed"
+            android:paddingEnd="@dimen/spacing"
+            android:paddingStart="@dimen/spacing"
+            android:paddingTop="@dimen/spacing"
+            android:text="@string/ingredients"
+            android:textAlignment="textStart"
+            android:textSize="@dimen/recipes_name_font_size" />
+
+        <TextView
+            android:id="@+id/ingredients_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:fontFamily="sans-serif-condensed"
+            android:paddingBottom="@dimen/spacing"
+            android:paddingEnd="@dimen/spacing"
+            android:paddingStart="@dimen/spacing"
+            tools:text="340 g suggar with sweet coffe beans"
+            android:textSize="16sp" />
+
+    </android.support.v7.widget.CardView>
+
+    <ListView
+        android:id="@+id/recipe_steps_list_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_gravity="top"
+        android:layout_weight="1" />
+
+</LinearLayout>

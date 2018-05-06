@@ -6,6 +6,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.aboutfuture.bakingapp.recipes.Ingredient;
@@ -19,11 +22,6 @@ import butterknife.ButterKnife;
 
 public class RecipeDetailsActivity extends AppCompatActivity implements MasterRecipeFragment.OnStepClickListener {
 
-    private int mRecipeId;
-    private String mRecipeName;
-    private ArrayList<Ingredient> mRecipeIngredients;
-    private ArrayList<Step> mRecipeSteps;
-    private Toast mToast;
     private Recipe mRecipe;
 
     @BindString(R.string.error_message)
@@ -48,14 +46,11 @@ public class RecipeDetailsActivity extends AppCompatActivity implements MasterRe
                     mRecipe = intent.getParcelableExtra(RecipesActivity.RECIPE_KEY);
                     setTitle(mRecipe.getName());
 
-                    mRecipeSteps = new ArrayList<>();
-                    mRecipeSteps.add(new Step(0, getString(R.string.ingredients), null, null, null));
-                    mRecipeSteps.addAll(mRecipe.getSteps());
-
                     FragmentManager fragmentManager = getSupportFragmentManager();
 
                     MasterRecipeFragment masterFragment = new MasterRecipeFragment();
-                    masterFragment.setSteps(mRecipeSteps);
+                    masterFragment.setSteps(mRecipe.getSteps());
+                    masterFragment.setIngredients(mRecipe.getIngredients());
                     fragmentManager.beginTransaction()
                             .add(R.id.master_container, masterFragment)
                             .commit();
@@ -64,11 +59,13 @@ public class RecipeDetailsActivity extends AppCompatActivity implements MasterRe
                         mTwoPane = true;
 
                         StepDetailsFragment stepFragment = new StepDetailsFragment();
-                        stepFragment.setSteps(mRecipeSteps);
-                        stepFragment.setIngredients(mRecipe.getIngredients());
+                        stepFragment.setSteps(mRecipe.getSteps());
                         fragmentManager.beginTransaction()
                                 .add(R.id.step_details_container, stepFragment)
                                 .commit();
+
+                        LinearLayout navigationButtons = findViewById(R.id.navigation_layout);
+                        navigationButtons.setVisibility(View.GONE);
                     } else {
                         mTwoPane = false;
                     }
@@ -82,7 +79,6 @@ public class RecipeDetailsActivity extends AppCompatActivity implements MasterRe
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putParcelable(RecipesActivity.RECIPE_KEY, mRecipe);
-        outState.putParcelableArrayList(RecipesActivity.RECIPE_STEP_KEY, mRecipeSteps);
 
         super.onSaveInstanceState(outState);
     }
@@ -96,10 +92,6 @@ public class RecipeDetailsActivity extends AppCompatActivity implements MasterRe
                     setTitle(mRecipe.getName());
                 }
             }
-
-            if (savedInstanceState.containsKey(RecipesActivity.RECIPE_STEP_KEY)) {
-                mRecipeSteps = savedInstanceState.getParcelableArrayList(RecipesActivity.RECIPE_STEP_KEY);
-            }
         }
 
         super.onRestoreInstanceState(savedInstanceState);
@@ -107,13 +99,7 @@ public class RecipeDetailsActivity extends AppCompatActivity implements MasterRe
 
     private void closeOnError(String message) {
         finish();
-        toastThis(message);
-    }
-
-    private void toastThis(String toastMessage) {
-        if (mToast != null) mToast.cancel();
-        mToast = Toast.makeText(this, toastMessage, Toast.LENGTH_SHORT);
-        mToast.show();
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -132,22 +118,17 @@ public class RecipeDetailsActivity extends AppCompatActivity implements MasterRe
     public void onStepSelected(int position) {
         if (mTwoPane) {
             StepDetailsFragment newFragment = new StepDetailsFragment();
-            if (position == 0) {
-                newFragment.setIngredients(mRecipeIngredients);
-            } else {
-                newFragment.setSteps(mRecipeSteps);
-            }
+            newFragment.setSteps(mRecipe.getSteps());
             newFragment.setPosition(position);
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.step_details_container, newFragment)
                     .commit();
+
+            // TODO: Hide navigation buttons
+
         } else {
             Intent intent = new Intent(this, StepDetailsActivity.class);
-            if (position == 0) {
-                intent.putExtra(RecipesActivity.INGREDIENTS_LIST_KEY, mRecipe.getIngredients());
-            } else {
-                intent.putExtra(RecipesActivity.RECIPE_STEP_KEY, mRecipeSteps);
-            }
+            intent.putExtra(RecipesActivity.RECIPE_STEP_KEY, mRecipe.getSteps());
             intent.putExtra(RecipesActivity.NUMBER_STEP_KEY, position);
             startActivity(intent);
         }

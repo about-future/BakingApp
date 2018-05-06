@@ -45,12 +45,10 @@ public class MasterRecipeAdapter extends BaseAdapter {
 
         // Set the text and return the newly created TextView
         if (position == 0) {
-            stepDescriptionTextView.setText(mContext.getString(R.string.ingredients));
-        } else if (position == 1) {
             stepDescriptionTextView.setText(mSteps.get(position).getShortDescription());
         } else {
             stepDescriptionTextView.setText(TextUtils.concat(
-                    String.valueOf(position - 1),
+                    String.valueOf(position),
                     ". ",
                     mSteps.get(position).getShortDescription()));
         }
