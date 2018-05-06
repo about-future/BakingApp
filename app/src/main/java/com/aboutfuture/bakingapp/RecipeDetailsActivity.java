@@ -37,48 +37,46 @@ public class RecipeDetailsActivity extends AppCompatActivity implements MasterRe
         setContentView(R.layout.activity_recipe_details);
         ButterKnife.bind(this);
 
-        // We initialize and set the toolbar
-        //setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-//        if (findViewById(R.id.step_details_container) != null) {
-//            mTwoPane = true;
-
-            if (savedInstanceState == null) {
-                Intent intent = getIntent();
-                if (intent != null) {
-                    if (intent.hasExtra(RecipesActivity.RECIPE_KEY)) {
-                        mRecipe = intent.getParcelableExtra(RecipesActivity.RECIPE_KEY);
-                        setTitle(mRecipe.getName());
+        if (savedInstanceState == null) {
+            Intent intent = getIntent();
+            if (intent != null) {
+                if (intent.hasExtra(RecipesActivity.RECIPE_KEY)) {
+                    mRecipe = intent.getParcelableExtra(RecipesActivity.RECIPE_KEY);
+                    setTitle(mRecipe.getName());
 
                     mRecipeSteps = new ArrayList<>();
                     mRecipeSteps.add(new Step(0, getString(R.string.ingredients), null, null, null));
                     mRecipeSteps.addAll(mRecipe.getSteps());
 
-                        FragmentManager fragmentManager = getSupportFragmentManager();
+                    FragmentManager fragmentManager = getSupportFragmentManager();
 
-                        MasterRecipeFragment masterFragment = new MasterRecipeFragment();
-                        masterFragment.setSteps(mRecipeSteps);
+                    MasterRecipeFragment masterFragment = new MasterRecipeFragment();
+                    masterFragment.setSteps(mRecipeSteps);
+                    fragmentManager.beginTransaction()
+                            .add(R.id.master_container, masterFragment)
+                            .commit();
+
+                    if (findViewById(R.id.step_details_container) != null) {
+                        mTwoPane = true;
+
+                        StepDetailsFragment stepFragment = new StepDetailsFragment();
+                        stepFragment.setSteps(mRecipeSteps);
+                        stepFragment.setIngredients(mRecipe.getIngredients());
                         fragmentManager.beginTransaction()
-                                .add(R.id.master_container, masterFragment)
+                                .add(R.id.step_details_container, stepFragment)
                                 .commit();
-
-//                        StepDetailsFragment stepFragment = new StepDetailsFragment();
-//                        stepFragment.setSteps(mRecipeSteps);
-//                        fragmentManager.beginTransaction()
-//                                .add(R.id.step_details_container, stepFragment)
-//                                .commit();
+                    } else {
+                        mTwoPane = false;
                     }
-                } else {
-                    closeOnError(errorMsg);
                 }
+            } else {
+                closeOnError(errorMsg);
             }
-
-//        } else {
-//            mTwoPane = false;
-//        }
+        }
     }
 
     @Override
@@ -133,33 +131,25 @@ public class RecipeDetailsActivity extends AppCompatActivity implements MasterRe
     @Override
     public void onStepSelected(int position) {
         if (mTwoPane) {
-            if (!TextUtils.isEmpty(mRecipe.getSteps().get(position).getVideoURL())){
-                //load video fragment
-            } else {
-                // hide the video part
-            }
-
             StepDetailsFragment newFragment = new StepDetailsFragment();
-            newFragment.setSteps(mRecipeSteps);
+            if (position == 0) {
+                newFragment.setIngredients(mRecipeIngredients);
+            } else {
+                newFragment.setSteps(mRecipeSteps);
+            }
+            newFragment.setPosition(position);
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.step_details_container, newFragment)
                     .commit();
         } else {
             Intent intent = new Intent(this, StepDetailsActivity.class);
-            intent.putExtra(RecipesActivity.RECIPE_STEP_KEY, mRecipeSteps);
-            intent.putExtra(RecipesActivity.POSITION_KEY, position);
+            if (position == 0) {
+                intent.putExtra(RecipesActivity.INGREDIENTS_LIST_KEY, mRecipe.getIngredients());
+            } else {
+                intent.putExtra(RecipesActivity.RECIPE_STEP_KEY, mRecipeSteps);
+            }
+            intent.putExtra(RecipesActivity.NUMBER_STEP_KEY, position);
             startActivity(intent);
         }
-
-        //Toast.makeText(this, "Position: " + position, Toast.LENGTH_SHORT).show();
-
-//        if (position == 0) {
-//
-//        } else {
-//            Intent intent = new Intent(this, StepDetailsActivity.class);
-//            intent.putExtra(RecipesActivity.RECIPE_KEY, mRecipe);
-//            intent.putExtra(RecipesActivity.POSITION_KEY, position);
-//            startActivity(intent);
-        //}
     }
 }

@@ -22,7 +22,6 @@ import java.util.ArrayList;
 public class MasterRecipeFragment extends Fragment {
 
     private ArrayList<Step> mSteps;
-
     private OnStepClickListener mCallback;
 
     public interface OnStepClickListener {

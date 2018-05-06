@@ -37,7 +37,7 @@ public class RecipesActivity extends AppCompatActivity implements
 
     private static final int RECIPES_LOADER_ID = 534;
     private static final String RECIPES_LIST_KEY = "recipes_list";
-    public static final String POSITION_KEY = "current_position";
+    private static final String POSITION_KEY = "current_position";
 
     public static final String RECIPE_KEY = "clicked_recipe";
     public static final String RECIPE_ID_KEY = "recipe_id";
@@ -45,6 +45,7 @@ public class RecipesActivity extends AppCompatActivity implements
     public static final String INGREDIENTS_LIST_KEY = "ingredients_list";
     public static final String STEPS_LIST_KEY = "steps_list";
     public static final String RECIPE_STEP_KEY = "recipe_step";
+    public static final String NUMBER_STEP_KEY = "number_step";
 
     @BindView(R.id.recipes_rv)
     RecyclerView mRecipesRecyclerView;

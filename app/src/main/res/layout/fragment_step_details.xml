@@ -6,13 +6,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/step_video_url"
+    <com.google.android.exoplayer2.ui.PlayerView
+        android:id="@+id/playerView"
         android:layout_width="match_parent"
-        android:layout_height="250dp"
-        android:background="@color/white"
-        android:textColor="@color/primary_text"
-        tools:text="video url" />
+        android:layout_height="wrap_content"
+        android:visibility="gone"/>
+
+    <ListView
+        android:id="@+id/ingredients_list_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_gravity="top"
+        android:visibility="visible"/>
+
+    <!--android:divider="@color/white"-->
+    <!--android:dividerHeight="1dp"-->
 
     <TextView
         android:id="@+id/step_description_tv"
@@ -21,6 +30,7 @@
         android:layout_weight="1"
         android:textSize="18sp"
         android:padding="@dimen/spacing"
+        android:visibility="visible"
         android:fontFamily="sans-serif-condensed"
         tools:text="description" />
 
