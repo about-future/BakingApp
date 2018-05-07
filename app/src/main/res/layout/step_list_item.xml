@@ -4,7 +4,8 @@
     android:id="@+id/step_short_description_tv"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:background="@drawable/touch_selector"
     android:fontFamily="sans-serif-condensed"
     android:padding="@dimen/spacing"
     android:textSize="18sp"
-    tools:text="Mix sugar with flour" />
+    tools:text="1. Mix sugar with flour" />

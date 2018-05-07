@@ -13,6 +13,7 @@
 
         <com.google.android.exoplayer2.ui.PlayerView
             android:id="@+id/playerView"
+            android:background="@color/black"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="visible" />
@@ -31,23 +32,66 @@
         <LinearLayout
             android:id="@+id/navigation_layout"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
+            android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:weightSum="2">
+            android:layout_margin="@dimen/spacing">
 
-            <ImageView
+            <LinearLayout
                 android:id="@+id/previous_step"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_weight="1"
-                app:srcCompat="@drawable/ic_previous" />
+                android:layout_width="175dp"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/spacing"
+                android:background="@drawable/touch_selector"
+                android:gravity="center"
+                android:orientation="horizontal">
 
-            <ImageView
-                android:id="@+id/next_step"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    app:srcCompat="@drawable/ic_previous" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing"
+                    android:layout_marginEnd="@dimen/spacing"
+                    android:fontFamily="sans-serif-condensed"
+                    android:text="@string/previous_step"
+                    android:textColor="@color/colorPrimaryDark"
+                    android:textSize="22sp" />
+
+            </LinearLayout>
+
+            <View
+                android:layout_width="0dp"
                 android:layout_weight="1"
-                app:srcCompat="@drawable/ic_next" />
+                android:layout_height="match_parent"/>
+
+            <LinearLayout
+                android:id="@+id/next_step"
+                android:layout_width="175dp"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/spacing"
+                android:background="@drawable/touch_selector"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/spacing"
+                    android:layout_marginEnd="@dimen/spacing"
+                    android:fontFamily="sans-serif-condensed"
+                    android:text="@string/next_step"
+                    android:textColor="@color/colorPrimaryDark"
+                    android:textSize="22sp" />
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    app:srcCompat="@drawable/ic_next" />
+
+            </LinearLayout>
 
         </LinearLayout>
 

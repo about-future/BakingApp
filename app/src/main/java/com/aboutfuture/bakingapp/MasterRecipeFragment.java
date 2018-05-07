@@ -6,9 +6,13 @@ import android.os.Bundle;
 
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -18,17 +22,23 @@ import android.widget.TextView;
 import com.aboutfuture.bakingapp.recipes.Ingredient;
 import com.aboutfuture.bakingapp.recipes.Recipe;
 import com.aboutfuture.bakingapp.recipes.Step;
+import com.aboutfuture.bakingapp.utils.ScreenUtils;
 
 import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 
 
-public class MasterRecipeFragment extends Fragment {
+public class MasterRecipeFragment extends Fragment implements MasterRecipeAdapter.ItemClickListener {
 
     private ArrayList<Step> mSteps;
     private ArrayList<Ingredient> mIngredients;
     private OnStepClickListener mCallback;
+
+    @Override
+    public void onItemClicked(int stepClicked) {
+        mCallback.onStepSelected(stepClicked);
+    }
 
     public interface OnStepClickListener {
         void onStepSelected(int position);
@@ -60,37 +70,38 @@ public class MasterRecipeFragment extends Fragment {
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_master_recipe, container, false);
         TextView ingredientsTextView = rootView.findViewById(R.id.ingredients_text_view);
-        ListView listView = rootView.findViewById(R.id.recipe_steps_list_view);
 
-        String ingredientsList = " ";
-        Log.v("INGREDIENTS SIZE", String.valueOf(mIngredients.size()));
-
-        //TODO: Ingredients not done
+        String ingredientsList = "";
         for (int i = 0; i < mIngredients.size(); i++) {
-            TextUtils.concat(
+            // Format quantity
+            double quantity = mIngredients.get(i).getQuantity();
+            String stringQuantity;
+            if (quantity - (int)quantity != 0) {
+                stringQuantity = String.valueOf(quantity);
+            } else {
+                stringQuantity = String.valueOf((int) quantity);
+            }
+
+            ingredientsList = TextUtils.concat(
                     ingredientsList,
-                    //TODO: format quantity
-                    String.valueOf(mIngredients.get(i).getQuantity()),
+                    stringQuantity,
                     " ",
                     mIngredients.get(i).getMeasure(),
                     " ",
                     mIngredients.get(i).getIngredientName(),
-                    "\n"
-            );
-
-            Log.v("INGREDIENTS", mIngredients.get(i).getIngredientName());
+                    "\n").toString();
         }
         ingredientsTextView.setText(ingredientsList);
 
-        MasterRecipeAdapter mAdapter = new MasterRecipeAdapter(getContext(), mSteps);
-        listView.setAdapter(mAdapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
-                // Trigger the callback method and pass in the position that was clicked
-                mCallback.onStepSelected(position);
-            }
-        });
+        LinearLayoutManager mLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+        RecyclerView stepListRecyclerView = rootView.findViewById(R.id.recipe_steps_rv);
+        stepListRecyclerView.setLayoutManager(mLayoutManager);
+
+        MasterRecipeAdapter mAdapter = new MasterRecipeAdapter(getContext(), mSteps, this);
+        stepListRecyclerView.setAdapter(mAdapter);
+
+        stepListRecyclerView.setHasFixedSize(true);
+        stepListRecyclerView.setNestedScrollingEnabled(false);
 
         return rootView;
     }

@@ -10,5 +10,7 @@
     <string name="error_message">No recipe details available</string>
     <string name="image_rights">www.tablespoon.com</string>
     <string name="ingredients">Ingredients</string>
+    <string name="previous_step">Previous</string>
+    <string name="next_step">Next</string>
 
 </resources>

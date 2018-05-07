@@ -3,6 +3,7 @@ package com.aboutfuture.bakingapp;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
@@ -18,9 +19,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.aboutfuture.bakingapp.recipes.Step;
+import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.PlaybackParameters;
@@ -44,6 +47,7 @@ import java.util.ArrayList;
 public class StepDetailsFragment extends Fragment implements Player.EventListener {
 
     private static final String VIDEO_POSITION_KEY = "position_key";
+    private static final String VIDEO_PLAY_STATE_KEY = "playing_state";
 
     private ArrayList<Step> mSteps;
     private int mStepNumber;
@@ -52,11 +56,11 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
     private PlayerView mPlayerView;
     private static MediaSessionCompat mMediaSession;
     private PlaybackStateCompat.Builder mStateBuilder;
-    private String mVideoUri;
     private long mVideoPosition;
+    private boolean mVideoPlayState;
 
-    private ImageView previousStepImageView;
-    private ImageView nextStepImageView;
+    private LinearLayout previousStepTextView;
+    private LinearLayout nextStepTextView;
 
     public StepDetailsFragment() {
     }
@@ -68,6 +72,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
             mSteps = savedInstanceState.getParcelableArrayList(RecipesActivity.RECIPE_STEP_KEY);
             mStepNumber = savedInstanceState.getInt(RecipesActivity.NUMBER_STEP_KEY);
             mVideoPosition = savedInstanceState.getLong(VIDEO_POSITION_KEY, 0);
+            mVideoPlayState = savedInstanceState.getBoolean(VIDEO_PLAY_STATE_KEY, true);
         }
 
         // Inflate the layout for this fragment
@@ -75,10 +80,6 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
 
         // Get a reference to the player view
         mPlayerView = rootView.findViewById(R.id.playerView);
-
-        // Load the cake slice image as the background image if no image available or until video is ready.
-        mPlayerView.setDefaultArtwork(BitmapFactory.decodeResource
-                (getResources(), R.drawable.cake));
 
         // Initialize the Media Session.
         initializeMediaSession(getContext());
@@ -106,27 +107,27 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
             mPlayerView.setVisibility(View.GONE);
         }
 
-        previousStepImageView = rootView.findViewById(R.id.previous_step);
-        nextStepImageView = rootView.findViewById(R.id.next_step);
+        previousStepTextView = rootView.findViewById(R.id.previous_step);
+        nextStepTextView = rootView.findViewById(R.id.next_step);
 
         if (mStepNumber == 0) {
-            previousStepImageView.setVisibility(View.INVISIBLE);
+            previousStepTextView.setVisibility(View.INVISIBLE);
         }
 
         if (mStepNumber == mSteps.size() - 1) {
-            nextStepImageView.setVisibility(View.INVISIBLE);
+            nextStepTextView.setVisibility(View.INVISIBLE);
         }
 
-        previousStepImageView.setOnClickListener(new View.OnClickListener() {
+        previousStepTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (mStepNumber > 0) {
                     mStepNumber--;
                 }
 
-                nextStepImageView.setVisibility(View.VISIBLE);
+                nextStepTextView.setVisibility(View.VISIBLE);
                 if (mStepNumber == 0) {
-                    previousStepImageView.setVisibility(View.INVISIBLE);
+                    previousStepTextView.setVisibility(View.INVISIBLE);
                 }
 
                 // Set step description
@@ -155,16 +156,16 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
             }
         });
 
-        nextStepImageView.setOnClickListener(new View.OnClickListener() {
+        nextStepTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (mStepNumber < mSteps.size() - 1) {
                     mStepNumber++;
                 }
 
-                previousStepImageView.setVisibility(View.VISIBLE);
+                previousStepTextView.setVisibility(View.VISIBLE);
                 if (mStepNumber == mSteps.size() - 1) {
-                    nextStepImageView.setVisibility(View.INVISIBLE);
+                    nextStepTextView.setVisibility(View.INVISIBLE);
                 }
 
                 // Set step description
@@ -211,9 +212,14 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
             DataSource.Factory factory = new DefaultDataSourceFactory(context, userAgent);
             MediaSource mediaSource = new ExtractorMediaSource.Factory(factory).createMediaSource(mediaUri);
             mExoPlayer.prepare(mediaSource);
-            mExoPlayer.setPlayWhenReady(true);
+
+            // Resume playing state and playing position
             if (mVideoPosition != 0) {
                 mExoPlayer.seekTo(mVideoPosition);
+                mExoPlayer.setPlayWhenReady(mVideoPlayState);
+            } else {
+                // Otherwise, if position is 0, the video never played and should start by default
+                mExoPlayer.setPlayWhenReady(true);
             }
         }
     }
@@ -278,6 +284,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
         outState.putInt(RecipesActivity.NUMBER_STEP_KEY, mStepNumber);
         if (mExoPlayer != null) {
             outState.putLong(VIDEO_POSITION_KEY, mExoPlayer.getCurrentPosition());
+            outState.putBoolean(VIDEO_PLAY_STATE_KEY, mVideoPlayState);
         }
     }
 
@@ -299,11 +306,28 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
     @Override
     public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
         if ((playbackState == Player.STATE_READY) && playWhenReady) {
-            mStateBuilder.setState(PlaybackStateCompat.STATE_PLAYING,
-                    mExoPlayer.getCurrentPosition(), 1f);
+            mStateBuilder.setState(
+                    PlaybackStateCompat.STATE_PLAYING,
+                    mExoPlayer.getCurrentPosition(),
+                    1f);
+            mVideoPlayState = true;
+
+            // If playing, hide status bar, if it was activated
+            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                if (getActivity() != null) {
+                    View decorView = getActivity().getWindow().getDecorView();
+                    // Hide the status bar.
+                    int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+                    decorView.setSystemUiVisibility(uiOptions);
+                }
+            }
+
         } else if ((playbackState == Player.STATE_READY)) {
-            mStateBuilder.setState(PlaybackStateCompat.STATE_PAUSED,
-                    mExoPlayer.getCurrentPosition(), 1f);
+            mStateBuilder.setState(
+                    PlaybackStateCompat.STATE_PAUSED,
+                    mExoPlayer.getCurrentPosition(),
+                    1f);
+            mVideoPlayState = false;
         }
         mMediaSession.setPlaybackState(mStateBuilder.build());
     }
