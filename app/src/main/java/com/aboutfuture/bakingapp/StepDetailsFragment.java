@@ -12,18 +12,15 @@ import android.support.v4.app.Fragment;
 import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.aboutfuture.bakingapp.recipes.Step;
-import com.google.android.exoplayer2.C;
+import com.aboutfuture.bakingapp.utils.ScreenUtils;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.PlaybackParameters;
@@ -43,6 +40,9 @@ import com.google.android.exoplayer2.util.Util;
 
 import java.util.ArrayList;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 
 public class StepDetailsFragment extends Fragment implements Player.EventListener {
 
@@ -53,14 +53,21 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
     private int mStepNumber;
 
     private SimpleExoPlayer mExoPlayer;
-    private PlayerView mPlayerView;
+
+    @BindView(R.id.playerView)
+    PlayerView mPlayerView;
+    @BindView(R.id.step_description_tv)
+    TextView descriptionTextView;
+
     private static MediaSessionCompat mMediaSession;
     private PlaybackStateCompat.Builder mStateBuilder;
     private long mVideoPosition;
     private boolean mVideoPlayState;
 
-    private LinearLayout previousStepTextView;
-    private LinearLayout nextStepTextView;
+    @BindView(R.id.previous_step)
+    LinearLayout previousStepLayout;
+    @BindView(R.id.next_step)
+    LinearLayout nextStepLayout;
 
     public StepDetailsFragment() {
     }
@@ -76,16 +83,16 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
         }
 
         // Inflate the layout for this fragment
-        View rootView = inflater.inflate(R.layout.fragment_step_details, container, false);
+        final View rootView = inflater.inflate(R.layout.fragment_step_details, container, false);
+        // Bind the views
+        ButterKnife.bind(this, rootView);
 
-        // Get a reference to the player view
-        mPlayerView = rootView.findViewById(R.id.playerView);
+        // Set a background image until video is ready
+        mPlayerView.setDefaultArtwork(BitmapFactory.decodeResource(getResources(), R.drawable.baking2));
 
         // Initialize the Media Session.
         initializeMediaSession(getContext());
 
-        // Get a reference to the ImageView in the fragment layout
-        final TextView descriptionTextView = rootView.findViewById(R.id.step_description_tv);
         // Set step description
         descriptionTextView.setText(mSteps.get(mStepNumber).getDescription());
 
@@ -107,27 +114,24 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
             mPlayerView.setVisibility(View.GONE);
         }
 
-        previousStepTextView = rootView.findViewById(R.id.previous_step);
-        nextStepTextView = rootView.findViewById(R.id.next_step);
-
         if (mStepNumber == 0) {
-            previousStepTextView.setVisibility(View.INVISIBLE);
+            previousStepLayout.setVisibility(View.INVISIBLE);
         }
 
         if (mStepNumber == mSteps.size() - 1) {
-            nextStepTextView.setVisibility(View.INVISIBLE);
+            nextStepLayout.setVisibility(View.INVISIBLE);
         }
 
-        previousStepTextView.setOnClickListener(new View.OnClickListener() {
+        previousStepLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (mStepNumber > 0) {
                     mStepNumber--;
                 }
 
-                nextStepTextView.setVisibility(View.VISIBLE);
+                nextStepLayout.setVisibility(View.VISIBLE);
                 if (mStepNumber == 0) {
-                    previousStepTextView.setVisibility(View.INVISIBLE);
+                    previousStepLayout.setVisibility(View.INVISIBLE);
                 }
 
                 // Set step description
@@ -156,16 +160,16 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
             }
         });
 
-        nextStepTextView.setOnClickListener(new View.OnClickListener() {
+        nextStepLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (mStepNumber < mSteps.size() - 1) {
                     mStepNumber++;
                 }
 
-                previousStepTextView.setVisibility(View.VISIBLE);
+                previousStepLayout.setVisibility(View.VISIBLE);
                 if (mStepNumber == mSteps.size() - 1) {
-                    nextStepTextView.setVisibility(View.INVISIBLE);
+                    nextStepLayout.setVisibility(View.INVISIBLE);
                 }
 
                 // Set step description
@@ -312,13 +316,17 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                     1f);
             mVideoPlayState = true;
 
-            // If playing, hide status bar, if it was activated
+            // If starting to play a video or play button is clicked and if in landscape mode
             if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
                 if (getActivity() != null) {
-                    View decorView = getActivity().getWindow().getDecorView();
-                    // Hide the status bar.
-                    int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
-                    decorView.setSystemUiVisibility(uiOptions);
+                    // Hide action and status bar
+                    hideSystemUI();
+                    // Set the video view size as big as the screen
+                    float[] screenSize = ScreenUtils.getScreenSize(getActivity());
+                    LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) mPlayerView.getLayoutParams();
+                    params.width = (int) screenSize[0]; // params.MATCH_PARENT;
+                    params.height = (int) screenSize[1]; //params.MATCH_PARENT;
+                    mPlayerView.setLayoutParams(params);
                 }
             }
 
@@ -387,6 +395,34 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
         @Override
         public void onReceive(Context context, Intent intent) {
             MediaButtonReceiver.handleIntent(mMediaSession, intent);
+        }
+    }
+
+    private void hideSystemUI() {
+        // Enables regular immersive mode (fullscreen mode)
+        if (getActivity() != null) {
+            View decorView = getActivity().getWindow().getDecorView();
+            decorView.setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_IMMERSIVE
+                            // Set the content to appear under the system bars so that the
+                            // content doesn't resize when the system bars hide and show.
+                            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            // Hide the nav bar and status bar
+                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_FULLSCREEN);
+        }
+
+    }
+
+    private void showSystemUI() {
+        if (getActivity() != null) {
+            View decorView = getActivity().getWindow().getDecorView();
+            decorView.setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
         }
     }
 }

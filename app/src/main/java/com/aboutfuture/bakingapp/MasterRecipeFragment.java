@@ -1,32 +1,25 @@
 package com.aboutfuture.bakingapp;
 
 import android.content.Context;
-import android.net.Uri;
 import android.os.Bundle;
 
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.aboutfuture.bakingapp.recipes.Ingredient;
-import com.aboutfuture.bakingapp.recipes.Recipe;
 import com.aboutfuture.bakingapp.recipes.Step;
-import com.aboutfuture.bakingapp.utils.ScreenUtils;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
+
+import butterknife.BindView;
+import butterknife.ButterKnife;
 
 
 public class MasterRecipeFragment extends Fragment implements MasterRecipeAdapter.ItemClickListener {
@@ -34,6 +27,11 @@ public class MasterRecipeFragment extends Fragment implements MasterRecipeAdapte
     private ArrayList<Step> mSteps;
     private ArrayList<Ingredient> mIngredients;
     private OnStepClickListener mCallback;
+
+    @BindView(R.id.ingredients_text_view)
+    TextView ingredientsTextView;
+    @BindView(R.id.recipe_steps_rv)
+    RecyclerView stepListRecyclerView;
 
     @Override
     public void onItemClicked(int stepClicked) {
@@ -69,7 +67,8 @@ public class MasterRecipeFragment extends Fragment implements MasterRecipeAdapte
 
         // Inflate the layout for this fragment
         final View rootView = inflater.inflate(R.layout.fragment_master_recipe, container, false);
-        TextView ingredientsTextView = rootView.findViewById(R.id.ingredients_text_view);
+        // Bind the views
+        ButterKnife.bind(this, rootView);
 
         String ingredientsList = "";
         for (int i = 0; i < mIngredients.size(); i++) {
@@ -94,7 +93,6 @@ public class MasterRecipeFragment extends Fragment implements MasterRecipeAdapte
         ingredientsTextView.setText(ingredientsList);
 
         LinearLayoutManager mLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
-        RecyclerView stepListRecyclerView = rootView.findViewById(R.id.recipe_steps_rv);
         stepListRecyclerView.setLayoutManager(mLayoutManager);
 
         MasterRecipeAdapter mAdapter = new MasterRecipeAdapter(getContext(), mSteps, this);

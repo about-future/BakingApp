@@ -88,9 +88,8 @@ public class RecipesActivity extends AppCompatActivity implements
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putParcelableArrayList(RECIPES_LIST_KEY, mRecipes);
-
         outState.putInt(POSITION_KEY, mGridLayoutManager.findFirstVisibleItemPosition());
-        //outState.putParcelable(POSITION_KEY, mGridLayoutManager.onSaveInstanceState());
+
         super.onSaveInstanceState(outState);
     }
 
@@ -102,8 +101,7 @@ public class RecipesActivity extends AppCompatActivity implements
 
                 if (mRecipes != null) {
                     showRecipes();
-                    //mRecipesAdapter = new RecipesAdapter(this, this);
-                    //mRecipesRecyclerView.setAdapter(mRecipesAdapter);
+
                     mRecipesAdapter.swapRecipes(mRecipes);
                 } else {
                     fetchRecipes(this);
@@ -111,7 +109,6 @@ public class RecipesActivity extends AppCompatActivity implements
             }
 
             if (savedInstanceState.containsKey(POSITION_KEY)) {
-                //mGridLayoutManager.onRestoreInstanceState(savedInstanceState.getParcelable(POSITION_KEY));
                 mPosition = savedInstanceState.getInt(POSITION_KEY);
                 if (mPosition == RecyclerView.NO_POSITION) {
                     mPosition = 0;
@@ -184,10 +181,6 @@ public class RecipesActivity extends AppCompatActivity implements
     @Override
     public void onGridItemClick(Recipe recipeClicked) {
         Intent recipeDetailsIntent = new Intent(RecipesActivity.this, RecipeDetailsActivity.class);
-//        recipeDetailsIntent.putExtra(RecipesActivity.RECIPE_ID_KEY, recipeClicked.getId());
-//        recipeDetailsIntent.putExtra(RecipesActivity.RECIPE_NAME_KEY, recipeClicked.getName());
-//        recipeDetailsIntent.putParcelableArrayListExtra(INGREDIENTS_LIST_KEY, recipeClicked.getIngredients());
-//        recipeDetailsIntent.putParcelableArrayListExtra(STEPS_LIST_KEY, recipeClicked.getSteps());
         recipeDetailsIntent.putExtra(RECIPE_KEY, recipeClicked);
         startActivity(recipeDetailsIntent);
     }
@@ -210,8 +203,6 @@ public class RecipesActivity extends AppCompatActivity implements
     public void onLoadFinished(@NonNull Loader loader, Object data) {
         if (data != null) {
             showRecipes();
-        } else {
-            //showNoResults();
         }
 
         mRecipes = (ArrayList<Recipe>) data;
