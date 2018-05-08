@@ -92,14 +92,10 @@ public class MasterRecipeFragment extends Fragment implements MasterRecipeAdapte
         }
         ingredientsTextView.setText(ingredientsList);
 
-        LinearLayoutManager mLayoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
-        stepListRecyclerView.setLayoutManager(mLayoutManager);
-
-        MasterRecipeAdapter mAdapter = new MasterRecipeAdapter(getContext(), mSteps, this);
-        stepListRecyclerView.setAdapter(mAdapter);
-
         stepListRecyclerView.setHasFixedSize(true);
+        stepListRecyclerView.setLayoutManager(new LinearLayoutManager(container.getContext()));
         stepListRecyclerView.setNestedScrollingEnabled(false);
+        stepListRecyclerView.setAdapter(new MasterRecipeAdapter(mSteps, this));
 
         return rootView;
     }

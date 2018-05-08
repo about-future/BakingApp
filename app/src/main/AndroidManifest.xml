@@ -17,25 +17,33 @@
             android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".RecipeDetailsActivity"
+        <activity
+            android:name=".RecipeDetailsActivity"
             android:parentActivityName=".RecipesActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".RecipesActivity" />
         </activity>
-
         <activity android:name=".StepDetailsActivity" />
 
-        <receiver android:name=".StepDetailsFragment$MediaReceiver" >
+        <receiver android:name=".StepDetailsFragment$MediaReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
+        <receiver android:name=".RecipeIngredientsWidgetProvider">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
 
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/recipe_ingredients_widget_provider_info" />
+        </receiver>
     </application>
 
 </manifest>

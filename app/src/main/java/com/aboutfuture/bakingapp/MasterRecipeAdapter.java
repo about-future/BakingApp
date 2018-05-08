@@ -20,7 +20,6 @@ import butterknife.ButterKnife;
 
 public class MasterRecipeAdapter extends RecyclerView.Adapter<MasterRecipeAdapter.StepViewHolder> {
 
-    private Context mContext;
     private ArrayList<Step> mSteps;
     private final ItemClickListener mOnClickListener;
 
@@ -28,16 +27,15 @@ public class MasterRecipeAdapter extends RecyclerView.Adapter<MasterRecipeAdapte
         void onItemClicked(int stepClicked);
     }
 
-    public MasterRecipeAdapter(Context context, ArrayList<Step> steps, ItemClickListener listener) {
-        mContext = context;
+    public MasterRecipeAdapter(ArrayList<Step> steps, ItemClickListener listener) {
         mSteps = steps;
         mOnClickListener = listener;
     }
 
     @NonNull
     @Override
-    public StepViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(mContext).inflate(R.layout.step_list_item, parent, false);
+    public MasterRecipeAdapter.StepViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.step_list_item, parent, false);
         view.setFocusable(false);
         return new StepViewHolder(view);
     }

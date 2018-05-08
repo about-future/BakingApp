@@ -88,7 +88,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
         ButterKnife.bind(this, rootView);
 
         // Set a background image until video is ready
-        mPlayerView.setDefaultArtwork(BitmapFactory.decodeResource(getResources(), R.drawable.baking2));
+        mPlayerView.setDefaultArtwork(BitmapFactory.decodeResource(getResources(), R.drawable.baking));
 
         // Initialize the Media Session.
         initializeMediaSession(getContext());
