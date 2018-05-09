@@ -76,7 +76,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            mSteps = savedInstanceState.getParcelableArrayList(RecipesActivity.RECIPE_STEP_KEY);
+            mSteps = savedInstanceState.getParcelableArrayList(RecipesActivity.RECIPE_STEPS_KEY);
             mStepNumber = savedInstanceState.getInt(RecipesActivity.NUMBER_STEP_KEY);
             mVideoPosition = savedInstanceState.getLong(VIDEO_POSITION_KEY, 0);
             mVideoPlayState = savedInstanceState.getBoolean(VIDEO_PLAY_STATE_KEY, true);
@@ -87,8 +87,15 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
         // Bind the views
         ButterKnife.bind(this, rootView);
 
+        //TODO: thumbnail case
+        String thumbnailUrl;
+        if (!TextUtils.isEmpty(mSteps.get(mStepNumber).getThumbnailURL())) {
+            thumbnailUrl = mSteps.get(mStepNumber).getThumbnailURL();
+        }
         // Set a background image until video is ready
         mPlayerView.setDefaultArtwork(BitmapFactory.decodeResource(getResources(), R.drawable.baking));
+
+        //TODO: onPause and onResume (pause video and save position)
 
         // Initialize the Media Session.
         initializeMediaSession(getContext());
@@ -284,7 +291,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
-        outState.putParcelableArrayList(RecipesActivity.RECIPE_STEP_KEY, mSteps);
+        outState.putParcelableArrayList(RecipesActivity.RECIPE_STEPS_KEY, mSteps);
         outState.putInt(RecipesActivity.NUMBER_STEP_KEY, mStepNumber);
         if (mExoPlayer != null) {
             outState.putLong(VIDEO_POSITION_KEY, mExoPlayer.getCurrentPosition());
@@ -399,14 +406,14 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
     }
 
     private void hideSystemUI() {
-        // Enables regular immersive mode (fullscreen mode)
+        // Enable fullscreen "lean back" mode
         if (getActivity() != null) {
             View decorView = getActivity().getWindow().getDecorView();
             decorView.setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_IMMERSIVE
-                            // Set the content to appear under the system bars so that the
-                            // content doesn't resize when the system bars hide and show.
-                            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    //View.SYSTEM_UI_FLAG_IMMERSIVE
+                    // Set the content to appear under the system bars so that the
+                    // content doesn't resize when the system bars hide and show.
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                             | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
                             | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                             // Hide the nav bar and status bar

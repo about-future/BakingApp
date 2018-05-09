@@ -4,8 +4,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Movie;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -15,19 +13,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.aboutfuture.bakingapp.data.RecipesContract;
-import com.aboutfuture.bakingapp.recipes.Ingredient;
 import com.aboutfuture.bakingapp.recipes.Recipe;
 import com.aboutfuture.bakingapp.recipes.RecipesAdapter;
 import com.aboutfuture.bakingapp.recipes.RecipesLoader;
-import com.aboutfuture.bakingapp.recipes.Step;
 import com.aboutfuture.bakingapp.utils.NetworkUtils;
 import com.aboutfuture.bakingapp.utils.ScreenUtils;
 
@@ -47,13 +40,10 @@ public class RecipesActivity extends AppCompatActivity implements
     private static final String RECIPES_LIST_KEY = "recipes_list";
     private static final String POSITION_KEY = "current_position";
 
-    public static final String RECIPE_KEY = "clicked_recipe";
     public static final String RECIPE_ID_KEY = "recipe_id";
     public static final String RECIPE_NAME_KEY = "recipe_name";
-    public static final String INGREDIENTS_LIST_KEY = "ingredients_list";
-    public static final String STEPS_LIST_KEY = "steps_list";
-    public static final String RECIPE_STEP_KEY = "recipe_step";
-    public static final String TOTAL_STEPS_KEY = "total_steps";
+    public static final String RECIPE_INGREDIENTS_KEY = "recipe_ingredients";
+    public static final String RECIPE_STEPS_KEY = "recipe_steps";
     public static final String NUMBER_STEP_KEY = "number_step";
 
     @BindView(R.id.recipes_rv)
@@ -90,7 +80,6 @@ public class RecipesActivity extends AppCompatActivity implements
 
         if (savedInstanceState == null) {
             getSupportLoaderManager().initLoader(DATABASE_LOADER_ID, null, this);
-            fetchRecipes(this);
         }
     }
 
@@ -111,8 +100,6 @@ public class RecipesActivity extends AppCompatActivity implements
                 if (mRecipes != null) {
                     showRecipes();
                     mRecipesAdapter.swapRecipes(mRecipes);
-                } else {
-                    fetchRecipes(this);
                 }
             }
 
@@ -187,9 +174,10 @@ public class RecipesActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onGridItemClick(int recipeId) {
+    public void onGridItemClick(int recipeId, String recipeName) {
         Intent recipeDetailsIntent = new Intent(RecipesActivity.this, RecipeDetailsActivity.class);
-        recipeDetailsIntent.putExtra(RECIPE_KEY, recipeId);
+        recipeDetailsIntent.putExtra(RECIPE_ID_KEY, recipeId);
+        recipeDetailsIntent.putExtra(RECIPE_NAME_KEY, recipeName);
         startActivity(recipeDetailsIntent);
     }
 
@@ -202,7 +190,7 @@ public class RecipesActivity extends AppCompatActivity implements
                 return new RecipesLoader(getApplicationContext());
 
             case DATABASE_LOADER_ID:
-                // If the loader id matches favourite actors loader, return a cursor loader
+                // If the loader id matches database loader, return a cursor loader
                 return new CursorLoader(
                         getApplicationContext(),
                         RecipesEntry.CONTENT_URI,
@@ -243,40 +231,39 @@ public class RecipesActivity extends AppCompatActivity implements
                 } else {
                     Cursor cursor = (Cursor) data;
 
-                    // Recreate recipes array
-                    // Find the columns of recipe attributes that we're interested in
-                    int recipeIdColumnIndex = cursor.getColumnIndex(RecipesEntry.COLUMN_RECIPE_ID);
-                    int nameColumnIndex = cursor.getColumnIndex(RecipesEntry.COLUMN_NAME);
-                    int servingsColumnIndex = cursor.getColumnIndex(RecipesEntry.COLUMN_SERVINGS);
-                    int imageColumnIndex = cursor.getColumnIndex(RecipesEntry.COLUMN_IMAGE);
+                    if (!cursor.isClosed()) {
+                        // Recreate recipes array
+                        // Find the columns of recipe attributes that we're interested in
+                        int recipeIdColumnIndex = cursor.getColumnIndex(RecipesEntry.COLUMN_RECIPE_ID);
+                        int nameColumnIndex = cursor.getColumnIndex(RecipesEntry.COLUMN_NAME);
+                        int servingsColumnIndex = cursor.getColumnIndex(RecipesEntry.COLUMN_SERVINGS);
+                        int imageColumnIndex = cursor.getColumnIndex(RecipesEntry.COLUMN_IMAGE);
 
-                    mRecipes = new ArrayList<>();
-                    for (int i = 0; i < cursor.getCount(); i++) {
-                        cursor.moveToPosition(i);
-                        // Set the extracted value from the Cursor for the given column index and use each
-                        // value to create a Recipe object
-                        mRecipes.add(new Recipe(
-                                cursor.getInt(recipeIdColumnIndex),
-                                cursor.getString(nameColumnIndex),
-                                cursor.getInt(servingsColumnIndex),
-                                cursor.getString(imageColumnIndex)));
+                        mRecipes = new ArrayList<>();
+                        for (int i = 0; i < cursor.getCount(); i++) {
+                            cursor.moveToPosition(i);
+                            // Set the extracted value from the Cursor for the given column index and use each
+                            // value to create a Recipe object
+                            mRecipes.add(new Recipe(
+                                    cursor.getInt(recipeIdColumnIndex),
+                                    cursor.getString(nameColumnIndex),
+                                    cursor.getInt(servingsColumnIndex),
+                                    cursor.getString(imageColumnIndex)));
+                        }
+
+                        cursor.close();
+
+                        mRecipesAdapter.swapRecipes(mRecipes);
+
+                        // If the RecyclerView has no position, we assume the first position in the list
+                        if (mPosition == RecyclerView.NO_POSITION) {
+                            mPosition = 0;
+                            // Scroll the RecyclerView to mPosition
+                            mRecipesRecyclerView.smoothScrollToPosition(mPosition);
+                        }
+
+                        showRecipes();
                     }
-
-                    cursor.close();
-
-                    //mRecipesAdapter = new RecipesAdapter(this, this);
-                    //mRecipesRecyclerView.setAdapter(mRecipesAdapter);
-
-                    mRecipesAdapter.swapRecipes(mRecipes);
-
-                    // If the RecyclerView has no position, we assume the first position in the list
-                    if (mPosition == RecyclerView.NO_POSITION) {
-                        mPosition = 0;
-                        // Scroll the RecyclerView to mPosition
-                        mRecipesRecyclerView.smoothScrollToPosition(mPosition);
-                    }
-
-                    showRecipes();
                 }
 
                 break;

@@ -61,8 +61,8 @@ public class MasterRecipeFragment extends Fragment implements MasterRecipeAdapte
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            mSteps = savedInstanceState.getParcelableArrayList(RecipesActivity.RECIPE_STEP_KEY);
-            mIngredients = savedInstanceState.getParcelableArrayList(RecipesActivity.INGREDIENTS_LIST_KEY);
+            mSteps = savedInstanceState.getParcelableArrayList(RecipesActivity.RECIPE_STEPS_KEY);
+            mIngredients = savedInstanceState.getParcelableArrayList(RecipesActivity.RECIPE_INGREDIENTS_KEY);
         }
 
         // Inflate the layout for this fragment
@@ -105,7 +105,7 @@ public class MasterRecipeFragment extends Fragment implements MasterRecipeAdapte
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
-        outState.putParcelableArrayList(RecipesActivity.RECIPE_STEP_KEY, mSteps);
-        outState.putParcelableArrayList(RecipesActivity.INGREDIENTS_LIST_KEY, mIngredients);
+        outState.putParcelableArrayList(RecipesActivity.RECIPE_STEPS_KEY, mSteps);
+        outState.putParcelableArrayList(RecipesActivity.RECIPE_INGREDIENTS_KEY, mIngredients);
     }
 }

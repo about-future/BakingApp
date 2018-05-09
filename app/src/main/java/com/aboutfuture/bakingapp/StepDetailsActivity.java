@@ -28,7 +28,7 @@ public class StepDetailsActivity extends AppCompatActivity {
             FragmentManager fragmentManager = getSupportFragmentManager();
 
             StepDetailsFragment stepFragment = new StepDetailsFragment();
-            ArrayList<Step> mSteps = getIntent().getParcelableArrayListExtra(RecipesActivity.RECIPE_STEP_KEY);
+            ArrayList<Step> mSteps = getIntent().getParcelableArrayListExtra(RecipesActivity.RECIPE_STEPS_KEY);
             stepFragment.setSteps(mSteps);
             stepFragment.setPosition(stepNumber);
             fragmentManager.beginTransaction()

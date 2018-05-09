@@ -18,6 +18,8 @@ public class RecipeIngredientsWidgetProvider extends AppWidgetProvider {
         // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.recipe_ingredients_widget_provider);
 
+        //TODO: finish the widget
+
         // Create an Intent to launch RecipesActivity
         Intent intent = new Intent(context, RecipesActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent,0);
