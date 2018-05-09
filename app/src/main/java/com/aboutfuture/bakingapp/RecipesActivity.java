@@ -1,8 +1,11 @@
 package com.aboutfuture.bakingapp;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Movie;
+import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
@@ -19,10 +22,12 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.aboutfuture.bakingapp.data.RecipesContract;
 import com.aboutfuture.bakingapp.recipes.Ingredient;
 import com.aboutfuture.bakingapp.recipes.Recipe;
 import com.aboutfuture.bakingapp.recipes.RecipesAdapter;
 import com.aboutfuture.bakingapp.recipes.RecipesLoader;
+import com.aboutfuture.bakingapp.recipes.Step;
 import com.aboutfuture.bakingapp.utils.NetworkUtils;
 import com.aboutfuture.bakingapp.utils.ScreenUtils;
 
@@ -31,11 +36,14 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import static com.aboutfuture.bakingapp.data.RecipesContract.*;
+
 public class RecipesActivity extends AppCompatActivity implements
         RecipesAdapter.GridItemClickListener,
         LoaderManager.LoaderCallbacks {
 
     private static final int RECIPES_LOADER_ID = 534;
+    private static final int DATABASE_LOADER_ID = 316;
     private static final String RECIPES_LIST_KEY = "recipes_list";
     private static final String POSITION_KEY = "current_position";
 
@@ -81,6 +89,7 @@ public class RecipesActivity extends AppCompatActivity implements
         mRecipesRecyclerView.setAdapter(mRecipesAdapter);
 
         if (savedInstanceState == null) {
+            getSupportLoaderManager().initLoader(DATABASE_LOADER_ID, null, this);
             fetchRecipes(this);
         }
     }
@@ -101,7 +110,6 @@ public class RecipesActivity extends AppCompatActivity implements
 
                 if (mRecipes != null) {
                     showRecipes();
-
                     mRecipesAdapter.swapRecipes(mRecipes);
                 } else {
                     fetchRecipes(this);
@@ -143,7 +151,7 @@ public class RecipesActivity extends AppCompatActivity implements
             showLoading();
 
             //Init or restart loader
-            getSupportLoaderManager().restartLoader(RECIPES_LOADER_ID, null, this);
+            getSupportLoaderManager().initLoader(RECIPES_LOADER_ID, null, this);
         }
         // If no connection and the loader id is not FAVOURITES_LOADER_ID
         else {
@@ -179,9 +187,9 @@ public class RecipesActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onGridItemClick(Recipe recipeClicked) {
+    public void onGridItemClick(int recipeId) {
         Intent recipeDetailsIntent = new Intent(RecipesActivity.this, RecipeDetailsActivity.class);
-        recipeDetailsIntent.putExtra(RECIPE_KEY, recipeClicked);
+        recipeDetailsIntent.putExtra(RECIPE_KEY, recipeId);
         startActivity(recipeDetailsIntent);
     }
 
@@ -193,6 +201,16 @@ public class RecipesActivity extends AppCompatActivity implements
                 // If the loaded id matches recipes loader, return a new recipes loader
                 return new RecipesLoader(getApplicationContext());
 
+            case DATABASE_LOADER_ID:
+                // If the loader id matches favourite actors loader, return a cursor loader
+                return new CursorLoader(
+                        getApplicationContext(),
+                        RecipesEntry.CONTENT_URI,
+                        null,
+                        null,
+                        null,
+                        null);
+
             default:
                 throw new RuntimeException("Loader Not Implemented: " + loaderId);
         }
@@ -201,22 +219,129 @@ public class RecipesActivity extends AppCompatActivity implements
     @SuppressWarnings({"unchecked"})
     @Override
     public void onLoadFinished(@NonNull Loader loader, Object data) {
-        if (data != null) {
-            showRecipes();
+        switch (loader.getId()) {
+            case RECIPES_LOADER_ID:
+                mRecipes = (ArrayList<Recipe>) data;
+                mRecipesAdapter.swapRecipes((ArrayList<Recipe>) data);
+
+                if (data != null) {
+                    insertRecipes((ArrayList<Recipe>) data);
+                }
+
+                if (mPosition == RecyclerView.NO_POSITION) {
+                    mPosition = 0;
+                    mRecipesRecyclerView.smoothScrollToPosition(mPosition);
+                }
+
+                showRecipes();
+
+                break;
+
+            case DATABASE_LOADER_ID:
+                if (data == null || ((Cursor) data).getCount() == 0) {
+                    fetchRecipes(getApplicationContext());
+                } else {
+                    Cursor cursor = (Cursor) data;
+
+                    // Recreate recipes array
+                    // Find the columns of recipe attributes that we're interested in
+                    int recipeIdColumnIndex = cursor.getColumnIndex(RecipesEntry.COLUMN_RECIPE_ID);
+                    int nameColumnIndex = cursor.getColumnIndex(RecipesEntry.COLUMN_NAME);
+                    int servingsColumnIndex = cursor.getColumnIndex(RecipesEntry.COLUMN_SERVINGS);
+                    int imageColumnIndex = cursor.getColumnIndex(RecipesEntry.COLUMN_IMAGE);
+
+                    mRecipes = new ArrayList<>();
+                    for (int i = 0; i < cursor.getCount(); i++) {
+                        cursor.moveToPosition(i);
+                        // Set the extracted value from the Cursor for the given column index and use each
+                        // value to create a Recipe object
+                        mRecipes.add(new Recipe(
+                                cursor.getInt(recipeIdColumnIndex),
+                                cursor.getString(nameColumnIndex),
+                                cursor.getInt(servingsColumnIndex),
+                                cursor.getString(imageColumnIndex)));
+                    }
+
+                    cursor.close();
+
+                    //mRecipesAdapter = new RecipesAdapter(this, this);
+                    //mRecipesRecyclerView.setAdapter(mRecipesAdapter);
+
+                    mRecipesAdapter.swapRecipes(mRecipes);
+
+                    // If the RecyclerView has no position, we assume the first position in the list
+                    if (mPosition == RecyclerView.NO_POSITION) {
+                        mPosition = 0;
+                        // Scroll the RecyclerView to mPosition
+                        mRecipesRecyclerView.smoothScrollToPosition(mPosition);
+                    }
+
+                    showRecipes();
+                }
+
+                break;
+
+            default:
+                break;
         }
-
-        mRecipes = (ArrayList<Recipe>) data;
-        mRecipesAdapter.swapRecipes((ArrayList<Recipe>) data);
-
-        if (mPosition == RecyclerView.NO_POSITION) {
-            mPosition = 0;
-            mRecipesRecyclerView.smoothScrollToPosition(mPosition);
-        }
-
     }
 
     @Override
     public void onLoaderReset(@NonNull Loader loader) {
 
+    }
+
+    private void insertRecipes(ArrayList<Recipe> recipes) {
+        for (int i = 0; i < recipes.size(); i++) {
+            // Recipe insertion
+            ContentValues recipeValues = new ContentValues();
+            recipeValues.put(RecipesEntry.COLUMN_RECIPE_ID, recipes.get(i).getId());
+            recipeValues.put(RecipesEntry.COLUMN_NAME, recipes.get(i).getName());
+            recipeValues.put(RecipesEntry.COLUMN_SERVINGS, recipes.get(i).getServings());
+            recipeValues.put(RecipesEntry.COLUMN_IMAGE, recipes.get(i).getImagePath());
+            getContentResolver().insert(RecipesEntry.CONTENT_URI, recipeValues);
+
+            // Ingredients insertion
+            ContentValues[] allIngredientsValues = new ContentValues[mRecipes.get(i).getIngredients().size()];
+
+            // For each ingredient, get the data and put it in ingredientValue
+            for (int j = 0; j < mRecipes.get(i).getIngredients().size(); j++) {
+                ContentValues ingredientValues = new ContentValues();
+                ingredientValues.put(IngredientsEntry.COLUMN_RECIPE_ID, recipes.get(i).getId());
+                ingredientValues.put(IngredientsEntry.COLUMN_QUANTITY, mRecipes.get(i).getIngredients().get(j).getQuantity());
+                ingredientValues.put(IngredientsEntry.COLUMN_MEASURE, mRecipes.get(i).getIngredients().get(j).getMeasure());
+                ingredientValues.put(IngredientsEntry.COLUMN_INGREDIENT_NAME, mRecipes.get(i).getIngredients().get(j).getIngredientName());
+
+                // Add each ingredientValues to the array of values
+                allIngredientsValues[j] = ingredientValues;
+            }
+
+            // If we have ingredients values to insert, insert them and update the value of ingredientsResponse
+            if (allIngredientsValues.length != 0) {
+                getContentResolver().bulkInsert(IngredientsEntry.CONTENT_URI, allIngredientsValues);
+            }
+
+            // Steps insertion
+            ContentValues[] allStepsValues = new ContentValues[mRecipes.get(i).getSteps().size()];
+
+            // For each step, get the data and put it in stepValue
+            for (int j = 0; j < mRecipes.get(i).getSteps().size(); j++) {
+                ContentValues stepValues = new ContentValues();
+                stepValues.put(StepsEntry.COLUMN_RECIPE_ID, recipes.get(i).getId());
+                stepValues.put(StepsEntry.COLUMN_STEP_ID, mRecipes.get(i).getSteps().get(j).getId());
+                stepValues.put(StepsEntry.COLUMN_SHORT_DESC, mRecipes.get(i).getSteps().get(j).getShortDescription());
+                stepValues.put(StepsEntry.COLUMN_DESCRIPTION, mRecipes.get(i).getSteps().get(j).getDescription());
+                stepValues.put(StepsEntry.COLUMN_VIDEO_URL, mRecipes.get(i).getSteps().get(j).getVideoURL());
+                stepValues.put(StepsEntry.COLUMN_THUMBNAIL, mRecipes.get(i).getSteps().get(j).getThumbnailURL());
+
+                // Add each stepValues to the array of values
+                allStepsValues[j] = stepValues;
+            }
+
+            // If we have steps values to insert, insert them and update the value of stepsResponse
+            if (allStepsValues.length != 0) {
+                getContentResolver().bulkInsert(StepsEntry.CONTENT_URI, allStepsValues);
+            }
+        }
     }
 }

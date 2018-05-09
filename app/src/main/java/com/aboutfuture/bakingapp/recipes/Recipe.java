@@ -30,6 +30,13 @@ public class Recipe implements Parcelable {
         this.imagePath = imagePath;
     }
 
+    public Recipe(int id, String name, int servings, String imagePath) {
+        this.id = id;
+        this.name = name;
+        this.servings = servings;
+        this.imagePath = imagePath;
+    }
+
     public Recipe() { }
 
     public int getId() { return id; }

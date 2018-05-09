@@ -1,7 +1,7 @@
 package com.aboutfuture.bakingapp.recipes;
 
 import android.content.Context;
-import android.graphics.Movie;
+import android.database.Cursor;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
@@ -21,15 +21,18 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import static com.aboutfuture.bakingapp.data.RecipesContract.*;
+
 public class RecipesAdapter extends RecyclerView.Adapter<RecipesAdapter.RecipesViewHolder> {
 
     private final Context mContext;
+    private Cursor mRecipesCursor;
     private ArrayList<Recipe> mRecipes = new ArrayList<Recipe>() {
     };
     private final GridItemClickListener mOnClickListener;
 
     public interface GridItemClickListener {
-        void onGridItemClick(Recipe recipeClicked);
+        void onGridItemClick(int recipeId);
     }
 
     public RecipesAdapter(Context context, GridItemClickListener listener) {
@@ -47,7 +50,25 @@ public class RecipesAdapter extends RecyclerView.Adapter<RecipesAdapter.RecipesV
 
     @Override
     public void onBindViewHolder(@NonNull final RecipesViewHolder holder, int position) {
-        switch (mRecipes.get(position).getName()) {
+        String recipeName;
+        final String imagePath;
+        int servings;
+        if (mRecipes != null && mRecipesCursor == null) {
+            recipeName = mRecipes.get(position).getName();
+            imagePath = mRecipes.get(position).getImagePath();
+            servings = mRecipes.get(position).getServings();
+        } else {
+            mRecipesCursor.moveToPosition(position);
+            int nameColumnIndex = mRecipesCursor.getColumnIndex(RecipesEntry.COLUMN_NAME);
+            int imagePathColumnIndex = mRecipesCursor.getColumnIndex(RecipesEntry.COLUMN_IMAGE);
+            int servingsColumnIndex = mRecipesCursor.getColumnIndex(RecipesEntry.COLUMN_SERVINGS);
+
+            recipeName = mRecipesCursor.getString(nameColumnIndex);
+            imagePath = mRecipesCursor.getString(imagePathColumnIndex);
+            servings = mRecipesCursor.getInt(servingsColumnIndex);
+        }
+
+        switch (recipeName) {
             case "Cheesecake":
                 holder.recipeImageView.setImageResource(R.drawable.cheesecake);
                 break;
@@ -61,12 +82,11 @@ public class RecipesAdapter extends RecyclerView.Adapter<RecipesAdapter.RecipesV
                 holder.recipeImageView.setImageResource(R.drawable.yellow_cake);
                 break;
             default:
-                if (!TextUtils.isEmpty(mRecipes.get(position).getImagePath())) {
-                    final String recipeImageUrl = mRecipes.get(position).getImagePath();
 
+                if (!TextUtils.isEmpty(imagePath)) {
                     // Try loading image from device memory or cache
                     Picasso.get()
-                            .load(recipeImageUrl)
+                            .load(imagePath)
                             .networkPolicy(NetworkPolicy.OFFLINE)
                             .into(holder.recipeImageView, new Callback() {
                                 @Override
@@ -78,7 +98,7 @@ public class RecipesAdapter extends RecyclerView.Adapter<RecipesAdapter.RecipesV
                                 public void onError(Exception e) {
                                     // Try again online, if cache loading failed
                                     Picasso.get()
-                                            .load(recipeImageUrl)
+                                            .load(imagePath)
                                             .error(R.drawable.cake)
                                             .into(holder.recipeImageView);
                                 }
@@ -90,26 +110,28 @@ public class RecipesAdapter extends RecyclerView.Adapter<RecipesAdapter.RecipesV
                 break;
         }
 
-        holder.recipeNameTextView.setText(mRecipes.get(position).getName());
-        holder.recipeServingSizeTextView.setText(
-                String.format(
-                        mContext.getString(R.string.servings),
-                        mRecipes.get(position).getServings()
-                )
-        );
+        holder.recipeNameTextView.setText(recipeName);
+        holder.recipeServingSizeTextView.setText(String.format(mContext.getString(R.string.servings), servings));
     }
 
     @Override
     public int getItemCount() {
-        if (mRecipes != null)
+        if (mRecipes != null && mRecipesCursor == null)
             return mRecipes.size();
+        else if (mRecipesCursor != null)
+            return mRecipesCursor.getCount();
         else
             return 0;
     }
 
-    // This method swaps the old movie result with the newly loaded ones and notify the change
+    // This method swaps the old recipe result with the newly loaded ones and notify the change
     public void swapRecipes(ArrayList<Recipe> newRecipes) {
         mRecipes = newRecipes;
+        notifyDataSetChanged();
+    }
+
+    public void swapDatabaseRecipes(Cursor newCursor) {
+        mRecipesCursor = newCursor;
         notifyDataSetChanged();
     }
 
@@ -123,7 +145,7 @@ public class RecipesAdapter extends RecyclerView.Adapter<RecipesAdapter.RecipesV
         @BindView(R.id.recipe_serving_tv)
         TextView recipeServingSizeTextView;
 
-        public RecipesViewHolder(View itemView) {
+        RecipesViewHolder(View itemView) {
             super(itemView);
             ButterKnife.bind(this, itemView);
             itemView.setOnClickListener(this);
@@ -132,7 +154,15 @@ public class RecipesAdapter extends RecyclerView.Adapter<RecipesAdapter.RecipesV
         @Override
         public void onClick(View view) {
             int adapterPosition = getAdapterPosition();
-            mOnClickListener.onGridItemClick(mRecipes.get(adapterPosition));
+            int recipeId;
+            if (mRecipes != null && mRecipesCursor == null) {
+                recipeId = mRecipes.get(adapterPosition).getId();
+            } else {
+                mRecipesCursor.moveToPosition(adapterPosition);
+                recipeId = mRecipesCursor.getInt(mRecipesCursor.getColumnIndex(RecipesEntry.COLUMN_RECIPE_ID));
+
+            }
+            mOnClickListener.onGridItemClick(recipeId);
         }
     }
 }

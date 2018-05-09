@@ -37,8 +37,6 @@ public class RecipesContract {
         public final static String _ID = BaseColumns._ID;                           // Type: INTEGER (Unique ID)
         public final static String COLUMN_RECIPE_ID =           "recipe_id";
         public final static String COLUMN_NAME =                "name";
-        public final static String COLUMN_INGREDIENTS =         "poster_path";
-        public final static String COLUMN_STEPS =               "backdrop_path";
         public final static String COLUMN_SERVINGS =            "servings";
         public final static String COLUMN_IMAGE =               "image";
     }
@@ -87,5 +85,13 @@ public class RecipesContract {
         public final static String COLUMN_DESCRIPTION =     "description";
         public final static String COLUMN_VIDEO_URL =       "videoURL";
         public final static String COLUMN_THUMBNAIL =       "thumbnailURL";
+    }
+
+    // Build a specific Uri for accessing table contents, using the content uri for
+    // the selected table and a recipeId.
+    public static Uri buildUriWithId(Uri contentUri, int recipeId) {
+        return contentUri.buildUpon()
+                .appendPath(Integer.toString(recipeId))
+                .build();
     }
 }

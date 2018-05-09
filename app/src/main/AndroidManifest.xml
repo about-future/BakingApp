@@ -35,6 +35,7 @@
                 <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
+
         <receiver android:name=".RecipeIngredientsWidgetProvider">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -44,6 +45,13 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/recipe_ingredients_widget_provider_info" />
         </receiver>
+
+        <!-- ContentProvider -->
+        <provider
+            android:name=".data.RecipesProvider"
+            android:authorities="@string/content_authority"
+            android:exported="false" />
+
     </application>
 
 </manifest>
