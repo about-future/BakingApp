@@ -17,5 +17,7 @@
 
     <!-- Database -->
     <string name="content_authority">com.aboutfuture.bakingapp</string>
+    <string name="choose_recipe">Click the muffin\n and choose a recipe!</string>
+    <string name="please_choose">Please choose a recipe</string>
 
 </resources>

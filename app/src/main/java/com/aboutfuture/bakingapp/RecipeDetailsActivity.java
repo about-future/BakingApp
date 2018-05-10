@@ -81,32 +81,7 @@ public class RecipeDetailsActivity extends AppCompatActivity implements
                     mRecipeName = intent.getStringExtra(RecipesActivity.RECIPE_NAME_KEY);
                     setTitle(mRecipeName);
 
-                    //Log.v("BEGIN INGREDIENTS SIZE", String.valueOf(mIngredients.size()));
-                    //Log.v("BEGIN STEPS SIZE", String.valueOf(mSteps.size()));
-
-//                    FragmentManager fragmentManager = getSupportFragmentManager();
-//                    mMasterFragment = new MasterRecipeFragment();
-//                    mStepFragment = new StepDetailsFragment();
-
                     getSupportLoaderManager().restartLoader(INGREDIENTS_LOADER_ID, null, this);
-                    //getSupportLoaderManager().restartLoader(STEPS_LOADER_ID, null, this);
-
-//                    fragmentManager.beginTransaction()
-//                            .add(R.id.master_container, mMasterFragment)
-//                            .commit();
-//
-//                    if (findViewById(R.id.step_details_container) != null) {
-//                        mTwoPane = true;
-//
-//                        fragmentManager.beginTransaction()
-//                                .add(R.id.step_details_container, mStepFragment)
-//                                .commit();
-//
-//                        LinearLayout navigationButtons = findViewById(R.id.navigation_layout);
-//                        navigationButtons.setVisibility(View.GONE);
-//                    } else {
-//                        mTwoPane = false;
-//                    }
                 }
             } else {
                 closeOnError(errorMsg);

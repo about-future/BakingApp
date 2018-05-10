@@ -22,6 +22,7 @@ import android.widget.TextView;
 import com.aboutfuture.bakingapp.recipes.Step;
 import com.aboutfuture.bakingapp.utils.ScreenUtils;
 import com.google.android.exoplayer2.ExoPlaybackException;
+import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
@@ -144,10 +145,11 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                 // Set step description
                 descriptionTextView.setText(mSteps.get(mStepNumber).getDescription());
 
-                // Reset video position
-                mVideoPosition = 0;
-                // Release player
-                releasePlayer();
+                // Stop player and reset video position
+                if (mExoPlayer != null) {
+                    mVideoPosition = 0;
+                    mExoPlayer.stop();
+                }
 
                 if (!TextUtils.isEmpty(mSteps.get(mStepNumber).getVideoURL())) {
                     // Show player
@@ -157,6 +159,8 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                             getContext(),
                             Uri.parse(mSteps.get(mStepNumber).getVideoURL()));
                 } else {
+                    // Release player
+                    releasePlayer();
                     // Otherwise, hide player and don't initialize it
                     mPlayerView.setVisibility(View.GONE);
                 }
@@ -182,10 +186,11 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                 // Set step description
                 descriptionTextView.setText(mSteps.get(mStepNumber).getDescription());
 
-                // Reset video position
-                mVideoPosition = 0;
-                // Release player
-                releasePlayer();
+                // Stop player and reset video position
+                if (mExoPlayer != null) {
+                    mVideoPosition = 0;
+                    mExoPlayer.stop();
+                }
 
                 if (!TextUtils.isEmpty(mSteps.get(mStepNumber).getVideoURL())) {
                     // Show player
@@ -195,6 +200,8 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                             getContext(),
                             Uri.parse(mSteps.get(mStepNumber).getVideoURL()));
                 } else {
+                    // Release player
+                    releasePlayer();
                     // Otherwise, hide player and don't initialize it
                     mPlayerView.setVisibility(View.GONE);
                 }
@@ -217,6 +224,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
 
             // Set the ExoPlayer.EventListener to this activity.
             mExoPlayer.addListener(this);
+        }
 
             // Prepare the MediaSource.
             String userAgent = Util.getUserAgent(context, "BakingApp");
@@ -232,7 +240,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                 // Otherwise, if position is 0, the video never played and should start by default
                 mExoPlayer.setPlayWhenReady(true);
             }
-        }
+        //}
     }
 
     private void initializeMediaSession(Context context) {
