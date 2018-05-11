@@ -49,12 +49,16 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
 
     private static final String VIDEO_POSITION_KEY = "position_key";
     private static final String VIDEO_PLAY_STATE_KEY = "playing_state";
+    private static final String HIDE_NAVIGATION_KEY = "hide_navigation";
 
     private ArrayList<Step> mSteps;
     private int mStepNumber;
+    private boolean mHideNavigation;
 
     private SimpleExoPlayer mExoPlayer;
 
+    @BindView(R.id.navigation_layout)
+    LinearLayout navigationLayout;
     @BindView(R.id.playerView)
     PlayerView mPlayerView;
     @BindView(R.id.step_description_tv)
@@ -81,6 +85,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
             mStepNumber = savedInstanceState.getInt(RecipesActivity.NUMBER_STEP_KEY);
             mVideoPosition = savedInstanceState.getLong(VIDEO_POSITION_KEY, 0);
             mVideoPlayState = savedInstanceState.getBoolean(VIDEO_PLAY_STATE_KEY, true);
+            mHideNavigation = savedInstanceState.getBoolean(HIDE_NAVIGATION_KEY, false);
         }
 
         // Inflate the layout for this fragment
@@ -105,7 +110,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
         descriptionTextView.setText(mSteps.get(mStepNumber).getDescription());
 
         // Set activity title
-        if (getActivity() != null)
+        if (getActivity() != null && !mHideNavigation)
             getActivity().setTitle(mSteps.get(mStepNumber).getShortDescription());
 
         if (!TextUtils.isEmpty(mSteps.get(mStepNumber).getVideoURL())) {
@@ -166,7 +171,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                 }
 
                 // Set activity title
-                if (getActivity() != null)
+                if (getActivity() != null && !mHideNavigation)
                     getActivity().setTitle(mSteps.get(mStepNumber).getShortDescription());
             }
         });
@@ -207,10 +212,16 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                 }
 
                 // Set activity title
-                if (getActivity() != null)
+                if (getActivity() != null && !mHideNavigation)
                     getActivity().setTitle(mSteps.get(mStepNumber).getShortDescription());
             }
         });
+
+        if (mHideNavigation) {
+            navigationLayout.setVisibility(View.GONE);
+        } else {
+            navigationLayout.setVisibility(View.VISIBLE);
+        }
 
         return rootView;
     }
@@ -292,10 +303,10 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
     public void setSteps(ArrayList<Step> steps) {
         mSteps = steps;
     }
-
     public void setPosition(int position) {
         mStepNumber = position;
     }
+    public void hideNavigation(boolean hideButtons) { mHideNavigation = hideButtons; }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
@@ -305,6 +316,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
             outState.putLong(VIDEO_POSITION_KEY, mExoPlayer.getCurrentPosition());
             outState.putBoolean(VIDEO_PLAY_STATE_KEY, mVideoPlayState);
         }
+        outState.putBoolean(HIDE_NAVIGATION_KEY, mHideNavigation);
     }
 
     @Override
@@ -332,7 +344,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
             mVideoPlayState = true;
 
             // If starting to play a video or play button is clicked and if in landscape mode
-            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE && !mHideNavigation) {
                 if (getActivity() != null) {
                     // Hide action and status bar
                     hideSystemUI();

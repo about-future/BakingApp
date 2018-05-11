@@ -31,6 +31,7 @@ public class StepDetailsActivity extends AppCompatActivity {
             ArrayList<Step> mSteps = getIntent().getParcelableArrayListExtra(RecipesActivity.RECIPE_STEPS_KEY);
             stepFragment.setSteps(mSteps);
             stepFragment.setPosition(stepNumber);
+            stepFragment.hideNavigation(false);
             fragmentManager.beginTransaction()
                     .add(R.id.step_details_container, stepFragment)
                     .commit();

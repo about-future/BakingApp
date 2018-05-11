@@ -33,6 +33,7 @@ public class RecipeDetailsActivity extends AppCompatActivity implements
 
     private static final int INGREDIENTS_LOADER_ID = 436876;
     private static final int STEPS_LOADER_ID = 436263;
+    private static final String TWO_PANE_KEY = "two_pane";
 
     // Query projection used to retrieve recipe ingredients
     private static final String[] INGREDIENTS_PROJECTION = {
@@ -95,6 +96,7 @@ public class RecipeDetailsActivity extends AppCompatActivity implements
         outState.putString(RecipesActivity.RECIPE_NAME_KEY, mRecipeName);
         outState.putParcelableArrayList(RecipesActivity.RECIPE_INGREDIENTS_KEY, mIngredients);
         outState.putParcelableArrayList(RecipesActivity.RECIPE_STEPS_KEY, mSteps);
+        outState.putBoolean(TWO_PANE_KEY, mTwoPane);
 
         super.onSaveInstanceState(outState);
     }
@@ -115,6 +117,9 @@ public class RecipeDetailsActivity extends AppCompatActivity implements
 
             if (savedInstanceState.containsKey(RecipesActivity.RECIPE_STEPS_KEY))
                 mSteps = savedInstanceState.getParcelableArrayList(RecipesActivity.RECIPE_STEPS_KEY);
+
+            if (savedInstanceState.containsKey(TWO_PANE_KEY))
+                mTwoPane = savedInstanceState.getBoolean(TWO_PANE_KEY, false);
         }
 
         super.onRestoreInstanceState(savedInstanceState);
@@ -143,6 +148,7 @@ public class RecipeDetailsActivity extends AppCompatActivity implements
             StepDetailsFragment newFragment = new StepDetailsFragment();
             newFragment.setSteps(mSteps);
             newFragment.setPosition(position);
+            newFragment.hideNavigation(mTwoPane);
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.step_details_container, newFragment)
                     .commit();
@@ -203,18 +209,10 @@ public class RecipeDetailsActivity extends AppCompatActivity implements
                                 cursor.getString(measureColumnIndex),
                                 cursor.getString(nameColumnIndex)));
                     }
-
-//                    if (!cursor.isClosed()) {
-                        cursor.close();
-//                    }
-
-                    Log.v("INGREDIENTS SIZE", String.valueOf(mIngredients.size()));
+                    cursor.close();
 
                     // Get recipe steps
                     getSupportLoaderManager().restartLoader(STEPS_LOADER_ID, null, this);
-
-                    // Populate ingredients section
-                    //mMasterFragment.setIngredients(mIngredients);
                 }
                 break;
 
@@ -245,13 +243,6 @@ public class RecipeDetailsActivity extends AppCompatActivity implements
                         cursor.close();
                     }
 
-                    Log.v("INGREDIENTS 2 SIZE", String.valueOf(mIngredients.size()));
-                    Log.v("STEPS SIZE", String.valueOf(mSteps.size()));
-
-                    // Populate steps section
-                    //mMasterFragment.setSteps(mSteps);
-                    //mStepFragment.setSteps(mSteps);
-
                     FragmentManager fragmentManager = getSupportFragmentManager();
 
                     mMasterFragment = new MasterRecipeFragment();
@@ -266,18 +257,13 @@ public class RecipeDetailsActivity extends AppCompatActivity implements
 
                         mStepFragment = new StepDetailsFragment();
                         mStepFragment.setSteps(mSteps);
+                        mStepFragment.hideNavigation(mTwoPane);
                         fragmentManager.beginTransaction()
                                 .add(R.id.step_details_container, mStepFragment)
                                 .commit();
-
-                        LinearLayout navigationButtons = findViewById(R.id.navigation_layout);
-                        navigationButtons.setVisibility(View.GONE);
                     } else {
                         mTwoPane = false;
                     }
-
-                    Log.v("TWO PANE", String.valueOf(mTwoPane));
-
                 }
                 break;
 
