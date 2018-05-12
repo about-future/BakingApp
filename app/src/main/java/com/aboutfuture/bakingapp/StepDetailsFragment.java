@@ -51,8 +51,7 @@ import butterknife.ButterKnife;
 public class StepDetailsFragment extends Fragment implements Player.EventListener {
 
     private static final String VIDEO_POSITION_KEY = "position_key";
-    private static final String VIDEO_SAVE_RESTORE_PLAYING_STATE_KEY = "save_restore_state";
-    private static final String VIDEO_RAUSE_RESUME_PLAYING_STATE_KEY = "pause_resume_state";
+    private static final String VIDEO_PLAYING_STATE_KEY = "playing_state";
     private static final String HIDE_NAVIGATION_KEY = "hide_navigation";
 
     private ArrayList<Step> mSteps;
@@ -73,8 +72,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
     private static MediaSessionCompat mMediaSession;
     private PlaybackStateCompat.Builder mStateBuilder;
     private long mVideoPosition;
-    private boolean mVideoSaveRestorePlayingState = true;
-    private boolean mVideoPauseResumePlayingState = true;
+    private boolean mVideoPlayingState;
     private Bundle mBundleState;
 
     @BindView(R.id.previous_step)
@@ -92,7 +90,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
             mSteps = savedInstanceState.getParcelableArrayList(RecipesActivity.RECIPE_STEPS_KEY);
             mStepNumber = savedInstanceState.getInt(RecipesActivity.NUMBER_STEP_KEY);
             mVideoPosition = savedInstanceState.getLong(VIDEO_POSITION_KEY, 0);
-            mVideoSaveRestorePlayingState = savedInstanceState.getBoolean(VIDEO_SAVE_RESTORE_PLAYING_STATE_KEY);
+            mVideoPlayingState = savedInstanceState.getBoolean(VIDEO_PLAYING_STATE_KEY);
             mHideNavigation = savedInstanceState.getBoolean(HIDE_NAVIGATION_KEY, false);
         }
 
@@ -227,10 +225,9 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
     public void onPause() {
         super.onPause();
 
-        mBundleState = new Bundle();
         if (mExoPlayer != null) {
-            mBundleState.putBoolean(VIDEO_RAUSE_RESUME_PLAYING_STATE_KEY, mExoPlayer.getPlayWhenReady());
-            mBundleState.putLong(VIDEO_POSITION_KEY, mExoPlayer.getCurrentPosition());
+            mVideoPlayingState = mExoPlayer.getPlayWhenReady();
+            mVideoPosition = mExoPlayer.getCurrentPosition();
             mExoPlayer.setPlayWhenReady(false);
         }
     }
@@ -239,20 +236,28 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
     public void onResume() {
         super.onResume();
 
-        // Restore playing state and video position
-        if (mBundleState != null) {
-            mVideoPauseResumePlayingState = mBundleState.getBoolean(VIDEO_RAUSE_RESUME_PLAYING_STATE_KEY);
-            mVideoPosition = mBundleState.getLong(VIDEO_POSITION_KEY, 0);
-        }
-
         if (mExoPlayer != null) {
-            // Seek the saved position
-            mExoPlayer.seekTo(mVideoPosition);
-
-            if (mVideoPauseResumePlayingState || mVideoSaveRestorePlayingState) {
+            // Resume playing state and playing position
+            if (mVideoPosition != 0) {
+                mExoPlayer.seekTo(mVideoPosition);
+                mExoPlayer.setPlayWhenReady(mVideoPlayingState);
+            } else {
+                // Otherwise, if position is 0, the video never played and should start by default
                 mExoPlayer.setPlayWhenReady(true);
             }
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        outState.putParcelableArrayList(RecipesActivity.RECIPE_STEPS_KEY, mSteps);
+        outState.putInt(RecipesActivity.NUMBER_STEP_KEY, mStepNumber);
+        if (mExoPlayer != null) {
+            outState.putLong(VIDEO_POSITION_KEY, mVideoPosition);
+            outState.putBoolean(VIDEO_PLAYING_STATE_KEY, mVideoPlayingState);
+        }
+
+        outState.putBoolean(HIDE_NAVIGATION_KEY, mHideNavigation);
     }
 
     @Override
@@ -328,17 +333,6 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
     }
 
     @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        outState.putParcelableArrayList(RecipesActivity.RECIPE_STEPS_KEY, mSteps);
-        outState.putInt(RecipesActivity.NUMBER_STEP_KEY, mStepNumber);
-        if (mExoPlayer != null) {
-            outState.putLong(VIDEO_POSITION_KEY, mExoPlayer.getCurrentPosition());
-            outState.putBoolean(VIDEO_SAVE_RESTORE_PLAYING_STATE_KEY, mVideoSaveRestorePlayingState);
-        }
-        outState.putBoolean(HIDE_NAVIGATION_KEY, mHideNavigation);
-    }
-
-    @Override
     public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
 
     }
@@ -360,7 +354,6 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                     PlaybackStateCompat.STATE_PLAYING,
                     mExoPlayer.getCurrentPosition(),
                     1f);
-            mVideoSaveRestorePlayingState = true;
 
             // If starting to play a video or play button is clicked and if in landscape mode
             if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE && !mHideNavigation) {
@@ -381,7 +374,6 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                     PlaybackStateCompat.STATE_PAUSED,
                     mExoPlayer.getCurrentPosition(),
                     1f);
-            mVideoSaveRestorePlayingState = false;
         }
         mMediaSession.setPlaybackState(mStateBuilder.build());
     }
@@ -416,6 +408,23 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
 
     }
 
+    private void hideSystemUI() {
+        // Enable fullscreen "lean back" mode
+        if (getActivity() != null) {
+            View decorView = getActivity().getWindow().getDecorView();
+            decorView.setSystemUiVisibility(
+                    // Set the content to appear under the system bars so that the
+                    // content doesn't resize when the system bars hide and show.
+                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            // Hide the nav bar and status bar
+                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_FULLSCREEN);
+        }
+
+    }
+
     // Media Session Callbacks, where all external clients control the player.
     private class MySessionCallback extends MediaSessionCompat.Callback {
         @Override
@@ -442,22 +451,5 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
         public void onReceive(Context context, Intent intent) {
             MediaButtonReceiver.handleIntent(mMediaSession, intent);
         }
-    }
-
-    private void hideSystemUI() {
-        // Enable fullscreen "lean back" mode
-        if (getActivity() != null) {
-            View decorView = getActivity().getWindow().getDecorView();
-            decorView.setSystemUiVisibility(
-                    // Set the content to appear under the system bars so that the
-                    // content doesn't resize when the system bars hide and show.
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            // Hide the nav bar and status bar
-                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_FULLSCREEN);
-        }
-
     }
 }
