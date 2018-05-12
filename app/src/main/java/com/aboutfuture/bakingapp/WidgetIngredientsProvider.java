@@ -25,7 +25,7 @@ public class WidgetIngredientsProvider extends AppWidgetProvider {
         intent.putExtra(RecipesActivity.RECIPE_NAME_KEY, recipeName);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         views.setOnClickPendingIntent(R.id.widget_title_tv, pendingIntent);
-        views.setTextViewText(R.id.widget_title_tv, recipeName);
+        views.setTextViewText(R.id.widget_title_tv, recipeName.concat(" ").concat(context.getString(R.string.ingredients)));
 
         // Set the list of ingredients for the selected recipe
         Intent adapterIntent = new Intent(context, WidgetListService.class);

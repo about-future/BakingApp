@@ -13,16 +13,17 @@ import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.aboutfuture.bakingapp.recipes.Step;
 import com.aboutfuture.bakingapp.utils.ScreenUtils;
 import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
@@ -38,6 +39,8 @@ import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -48,7 +51,8 @@ import butterknife.ButterKnife;
 public class StepDetailsFragment extends Fragment implements Player.EventListener {
 
     private static final String VIDEO_POSITION_KEY = "position_key";
-    private static final String VIDEO_PLAY_STATE_KEY = "playing_state";
+    private static final String VIDEO_SAVE_RESTORE_PLAYING_STATE_KEY = "save_restore_state";
+    private static final String VIDEO_RAUSE_RESUME_PLAYING_STATE_KEY = "pause_resume_state";
     private static final String HIDE_NAVIGATION_KEY = "hide_navigation";
 
     private ArrayList<Step> mSteps;
@@ -61,13 +65,17 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
     LinearLayout navigationLayout;
     @BindView(R.id.playerView)
     PlayerView mPlayerView;
+    @BindView(R.id.step_thumbnail)
+    ImageView thumbnailImageView;
     @BindView(R.id.step_description_tv)
     TextView descriptionTextView;
 
     private static MediaSessionCompat mMediaSession;
     private PlaybackStateCompat.Builder mStateBuilder;
     private long mVideoPosition;
-    private boolean mVideoPlayState;
+    private boolean mVideoSaveRestorePlayingState = true;
+    private boolean mVideoPauseResumePlayingState = true;
+    private Bundle mBundleState;
 
     @BindView(R.id.previous_step)
     LinearLayout previousStepLayout;
@@ -84,7 +92,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
             mSteps = savedInstanceState.getParcelableArrayList(RecipesActivity.RECIPE_STEPS_KEY);
             mStepNumber = savedInstanceState.getInt(RecipesActivity.NUMBER_STEP_KEY);
             mVideoPosition = savedInstanceState.getLong(VIDEO_POSITION_KEY, 0);
-            mVideoPlayState = savedInstanceState.getBoolean(VIDEO_PLAY_STATE_KEY, true);
+            mVideoSaveRestorePlayingState = savedInstanceState.getBoolean(VIDEO_SAVE_RESTORE_PLAYING_STATE_KEY);
             mHideNavigation = savedInstanceState.getBoolean(HIDE_NAVIGATION_KEY, false);
         }
 
@@ -93,48 +101,26 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
         // Bind the views
         ButterKnife.bind(this, rootView);
 
-        //TODO: thumbnail case
-        String thumbnailUrl;
-        if (!TextUtils.isEmpty(mSteps.get(mStepNumber).getThumbnailURL())) {
-            thumbnailUrl = mSteps.get(mStepNumber).getThumbnailURL();
-        }
         // Set a background image until video is ready
         mPlayerView.setDefaultArtwork(BitmapFactory.decodeResource(getResources(), R.drawable.baking));
-
-        //TODO: onPause and onResume (pause video and save position)
 
         // Initialize the Media Session.
         initializeMediaSession(getContext());
 
-        // Set step description
-        descriptionTextView.setText(mSteps.get(mStepNumber).getDescription());
+        // Set video or thumbnail and step description
+        setStepContent();
 
-        // Set activity title
-        if (getActivity() != null && !mHideNavigation)
-            getActivity().setTitle(mSteps.get(mStepNumber).getShortDescription());
-
-        if (!TextUtils.isEmpty(mSteps.get(mStepNumber).getVideoURL())) {
-            // Show player
-            mPlayerView.setVisibility(View.VISIBLE);
-            // Release player
-            releasePlayer();
-            // Initialize the player if there is a video url available
-            initializePlayer(
-                    getContext(),
-                    Uri.parse(mSteps.get(mStepNumber).getVideoURL()));
-        } else {
-            // Otherwise, hide player and don't initialize it
-            mPlayerView.setVisibility(View.GONE);
-        }
-
+        // If it's the first step in the recipe, hide "Previous" button
         if (mStepNumber == 0) {
             previousStepLayout.setVisibility(View.INVISIBLE);
         }
 
+        // If it's the last step in the recipe, hide "Next" button
         if (mStepNumber == mSteps.size() - 1) {
             nextStepLayout.setVisibility(View.INVISIBLE);
         }
 
+        // Set a click listener for the Previous button
         previousStepLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -147,35 +133,12 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                     previousStepLayout.setVisibility(View.INVISIBLE);
                 }
 
-                // Set step description
-                descriptionTextView.setText(mSteps.get(mStepNumber).getDescription());
-
-                // Stop player and reset video position
-                if (mExoPlayer != null) {
-                    mVideoPosition = 0;
-                    mExoPlayer.stop();
-                }
-
-                if (!TextUtils.isEmpty(mSteps.get(mStepNumber).getVideoURL())) {
-                    // Show player
-                    mPlayerView.setVisibility(View.VISIBLE);
-                    // Initialize the player if there is a video url available
-                    initializePlayer(
-                            getContext(),
-                            Uri.parse(mSteps.get(mStepNumber).getVideoURL()));
-                } else {
-                    // Release player
-                    releasePlayer();
-                    // Otherwise, hide player and don't initialize it
-                    mPlayerView.setVisibility(View.GONE);
-                }
-
-                // Set activity title
-                if (getActivity() != null && !mHideNavigation)
-                    getActivity().setTitle(mSteps.get(mStepNumber).getShortDescription());
+                // Set video or thumbnail and step description
+                setStepContent();
             }
         });
 
+        // Set a click listener for the Next button
         nextStepLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -184,38 +147,17 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                 }
 
                 previousStepLayout.setVisibility(View.VISIBLE);
+
+                // If it's the last step, hide the "Next" button
                 if (mStepNumber == mSteps.size() - 1) {
                     nextStepLayout.setVisibility(View.INVISIBLE);
                 }
 
-                // Set step description
-                descriptionTextView.setText(mSteps.get(mStepNumber).getDescription());
-
-                // Stop player and reset video position
-                if (mExoPlayer != null) {
-                    mVideoPosition = 0;
-                    mExoPlayer.stop();
-                }
-
-                if (!TextUtils.isEmpty(mSteps.get(mStepNumber).getVideoURL())) {
-                    // Show player
-                    mPlayerView.setVisibility(View.VISIBLE);
-                    // Initialize the player if there is a video url available
-                    initializePlayer(
-                            getContext(),
-                            Uri.parse(mSteps.get(mStepNumber).getVideoURL()));
-                } else {
-                    // Release player
-                    releasePlayer();
-                    // Otherwise, hide player and don't initialize it
-                    mPlayerView.setVisibility(View.GONE);
-                }
-
-                // Set activity title
-                if (getActivity() != null && !mHideNavigation)
-                    getActivity().setTitle(mSteps.get(mStepNumber).getShortDescription());
+                // Set video or thumbnail and step description
+                setStepContent();
             }
         });
+
 
         if (mHideNavigation) {
             navigationLayout.setVisibility(View.GONE);
@@ -237,21 +179,11 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
             mExoPlayer.addListener(this);
         }
 
-            // Prepare the MediaSource.
-            String userAgent = Util.getUserAgent(context, "BakingApp");
-            DataSource.Factory factory = new DefaultDataSourceFactory(context, userAgent);
-            MediaSource mediaSource = new ExtractorMediaSource.Factory(factory).createMediaSource(mediaUri);
-            mExoPlayer.prepare(mediaSource);
-
-            // Resume playing state and playing position
-            if (mVideoPosition != 0) {
-                mExoPlayer.seekTo(mVideoPosition);
-                mExoPlayer.setPlayWhenReady(mVideoPlayState);
-            } else {
-                // Otherwise, if position is 0, the video never played and should start by default
-                mExoPlayer.setPlayWhenReady(true);
-            }
-        //}
+        // Prepare the MediaSource.
+        String userAgent = Util.getUserAgent(context, "BakingApp");
+        DataSource.Factory factory = new DefaultDataSourceFactory(context, userAgent);
+        MediaSource mediaSource = new ExtractorMediaSource.Factory(factory).createMediaSource(mediaUri);
+        mExoPlayer.prepare(mediaSource);
     }
 
     private void initializeMediaSession(Context context) {
@@ -276,13 +208,11 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
 
         mMediaSession.setPlaybackState(mStateBuilder.build());
 
-
         // MySessionCallback has methods that handle callbacks from a media controller.
         mMediaSession.setCallback(new MySessionCallback());
 
         // Start the Media Session since the activity is active.
         mMediaSession.setActive(true);
-
     }
 
     private void releasePlayer() {
@@ -294,19 +224,108 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
     }
 
     @Override
+    public void onPause() {
+        super.onPause();
+
+        mBundleState = new Bundle();
+        if (mExoPlayer != null) {
+            mBundleState.putBoolean(VIDEO_RAUSE_RESUME_PLAYING_STATE_KEY, mExoPlayer.getPlayWhenReady());
+            mBundleState.putLong(VIDEO_POSITION_KEY, mExoPlayer.getCurrentPosition());
+            mExoPlayer.setPlayWhenReady(false);
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // Restore playing state and video position
+        if (mBundleState != null) {
+            mVideoPauseResumePlayingState = mBundleState.getBoolean(VIDEO_RAUSE_RESUME_PLAYING_STATE_KEY);
+            mVideoPosition = mBundleState.getLong(VIDEO_POSITION_KEY, 0);
+        }
+
+        if (mExoPlayer != null) {
+            // Seek the saved position
+            mExoPlayer.seekTo(mVideoPosition);
+
+            if (mVideoPauseResumePlayingState || mVideoSaveRestorePlayingState) {
+                mExoPlayer.setPlayWhenReady(true);
+            }
+        }
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         releasePlayer();
         mMediaSession.setActive(false);
     }
 
+    private void setStepContent() {
+        // Set step description
+        descriptionTextView.setText(mSteps.get(mStepNumber).getDescription());
+
+        // Stop player and reset video position
+        if (mExoPlayer != null) {
+            mVideoPosition = 0;
+            mExoPlayer.stop();
+        }
+
+        if (!TextUtils.isEmpty(mSteps.get(mStepNumber).getVideoURL())) {
+            // Show player
+            mPlayerView.setVisibility(View.VISIBLE);
+            // Initialize the player if there is a video url available
+            initializePlayer(
+                    getContext(),
+                    Uri.parse(mSteps.get(mStepNumber).getVideoURL()));
+        } else {
+            // Release player
+            releasePlayer();
+            // Otherwise, hide player and don't initialize it
+            mPlayerView.setVisibility(View.GONE);
+
+            // Load thumbnail, if available
+            if (!TextUtils.isEmpty(mSteps.get(mStepNumber).getThumbnailURL())) {
+                loadThumbnail();
+            }
+        }
+
+        // Set activity title
+        if (getActivity() != null && !mHideNavigation)
+            getActivity().setTitle(mSteps.get(mStepNumber).getShortDescription());
+    }
+
+    private void loadThumbnail() {
+        thumbnailImageView.setVisibility(View.VISIBLE);
+        // Try loading thumbnail image
+        Picasso.get()
+                .load(mSteps.get(mStepNumber).getThumbnailURL())
+                .into(thumbnailImageView, new Callback() {
+                    @Override
+                    public void onSuccess() {
+                        // Yay!
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        // If loading failed, hide the view
+                        thumbnailImageView.setVisibility(View.GONE);
+                    }
+                });
+    }
+
     public void setSteps(ArrayList<Step> steps) {
         mSteps = steps;
     }
+
     public void setPosition(int position) {
         mStepNumber = position;
     }
-    public void hideNavigation(boolean hideButtons) { mHideNavigation = hideButtons; }
+
+    public void hideNavigation(boolean hideButtons) {
+        mHideNavigation = hideButtons;
+    }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
@@ -314,7 +333,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
         outState.putInt(RecipesActivity.NUMBER_STEP_KEY, mStepNumber);
         if (mExoPlayer != null) {
             outState.putLong(VIDEO_POSITION_KEY, mExoPlayer.getCurrentPosition());
-            outState.putBoolean(VIDEO_PLAY_STATE_KEY, mVideoPlayState);
+            outState.putBoolean(VIDEO_SAVE_RESTORE_PLAYING_STATE_KEY, mVideoSaveRestorePlayingState);
         }
         outState.putBoolean(HIDE_NAVIGATION_KEY, mHideNavigation);
     }
@@ -341,7 +360,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                     PlaybackStateCompat.STATE_PLAYING,
                     mExoPlayer.getCurrentPosition(),
                     1f);
-            mVideoPlayState = true;
+            mVideoSaveRestorePlayingState = true;
 
             // If starting to play a video or play button is clicked and if in landscape mode
             if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE && !mHideNavigation) {
@@ -362,7 +381,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                     PlaybackStateCompat.STATE_PAUSED,
                     mExoPlayer.getCurrentPosition(),
                     1f);
-            mVideoPlayState = false;
+            mVideoSaveRestorePlayingState = false;
         }
         mMediaSession.setPlaybackState(mStateBuilder.build());
     }
@@ -430,7 +449,6 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
         if (getActivity() != null) {
             View decorView = getActivity().getWindow().getDecorView();
             decorView.setSystemUiVisibility(
-                    //View.SYSTEM_UI_FLAG_IMMERSIVE
                     // Set the content to appear under the system bars so that the
                     // content doesn't resize when the system bars hide and show.
                     View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -441,15 +459,5 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                             | View.SYSTEM_UI_FLAG_FULLSCREEN);
         }
 
-    }
-
-    private void showSystemUI() {
-        if (getActivity() != null) {
-            View decorView = getActivity().getWindow().getDecorView();
-            decorView.setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
-        }
     }
 }

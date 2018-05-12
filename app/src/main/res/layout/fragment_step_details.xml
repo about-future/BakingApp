@@ -18,6 +18,13 @@
             android:layout_height="wrap_content"
             android:visibility="visible" />
 
+        <ImageView
+            android:id="@+id/step_thumbnail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            tools:srcCompat="@drawable/brownies"
+            android:visibility="gone"/>
+
         <TextView
             android:id="@+id/step_description_tv"
             android:layout_width="match_parent"
