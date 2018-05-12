@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="spacing">24dp</dimen>
+    <dimen name="small_margin">6dp</dimen>
+    <dimen name="video_spacing">12dp</dimen>
+    <dimen name="text_margin">24dp</dimen>
+</resources>

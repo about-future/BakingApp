@@ -8,7 +8,7 @@
     android:padding="@dimen/spacing">
 
     <LinearLayout
-        android:layout_width="70dp"
+        android:layout_width="@dimen/quantity_measure_width"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
@@ -16,7 +16,7 @@
             android:id="@+id/widget_quantity_tv"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
+            android:layout_marginEnd="@dimen/small_margin"
             android:fontFamily="sans-serif-condensed"
             android:textColor="@color/black"
             android:textSize="@dimen/messages_font_size"
