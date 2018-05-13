@@ -1,4 +1,4 @@
-package com.aboutfuture.bakingapp;
+package com.aboutfuture.bakingapp.widget;
 
 import android.content.Context;
 import android.content.Intent;
@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
+import com.aboutfuture.bakingapp.R;
 import com.aboutfuture.bakingapp.data.RecipesContract;
 
 import java.util.Objects;
@@ -21,8 +22,8 @@ public class WidgetListService extends RemoteViewsService {
 
     class ListViewsFactory implements RemoteViewsService.RemoteViewsFactory {
 
-        Context mContext;
-        int mRecipeId;
+        final Context mContext;
+        final int mRecipeId;
         Cursor mCursor;
 
         ListViewsFactory(Context context, int recipeId) {

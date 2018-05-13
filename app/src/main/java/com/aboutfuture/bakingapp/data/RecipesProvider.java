@@ -10,14 +10,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.aboutfuture.bakingapp.recipes.Ingredient;
-import com.aboutfuture.bakingapp.recipes.Recipe;
-
 import static com.aboutfuture.bakingapp.data.RecipesContract.*;
-import static com.aboutfuture.bakingapp.data.RecipesContract.CONTENT_AUTHORITY;
-import static com.aboutfuture.bakingapp.data.RecipesContract.PATH_INGREDIENTS;
-import static com.aboutfuture.bakingapp.data.RecipesContract.PATH_RECIPES;
-import static com.aboutfuture.bakingapp.data.RecipesContract.PATH_STEPS;
 
 public class RecipesProvider extends ContentProvider {
 

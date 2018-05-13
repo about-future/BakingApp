@@ -5,19 +5,16 @@
     <string name="loading">Loading&#8230;</string>
     <string name="no_connection_icon">No connection icon</string>
     <string name="servings">Serving for %1$d people.</string>
-    <string name="title_step_list">Steps</string>
-    <string name="title_step_detail">Step Detail</string>
+
+
     <string name="error_message">No recipe details available</string>
     <string name="image_rights">www.tablespoon.com</string>
     <string name="ingredients">Ingredients</string>
     <string name="previous_step">Previous</string>
     <string name="next_step">Next</string>
-    <string name="appwidget_text">EXAMPLE</string>
-    <string name="add_widget">Add widget</string>
 
     <!-- Database -->
     <string name="content_authority">com.aboutfuture.bakingapp</string>
-    <string name="choose_recipe">Click the muffin\n and choose a recipe!</string>
     <string name="please_choose">Please choose a recipe</string>
 
 </resources>

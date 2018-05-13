@@ -1,4 +1,4 @@
-package com.aboutfuture.bakingapp;
+package com.aboutfuture.bakingapp.widget;
 
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
@@ -7,6 +7,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.widget.RemoteViews;
+
+import com.aboutfuture.bakingapp.R;
+import com.aboutfuture.bakingapp.RecipeDetailsActivity;
+import com.aboutfuture.bakingapp.RecipesActivity;
+import com.aboutfuture.bakingapp.widget.WidgetListService;
 
 /**
  * Implementation of App Widget functionality.

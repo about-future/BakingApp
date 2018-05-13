@@ -13,7 +13,6 @@ import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -73,7 +72,6 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
     private PlaybackStateCompat.Builder mStateBuilder;
     private long mVideoPosition;
     private boolean mVideoPlayingState;
-    private Bundle mBundleState;
 
     @BindView(R.id.previous_step)
     LinearLayout previousStepLayout;
@@ -284,6 +282,8 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
             initializePlayer(
                     getContext(),
                     Uri.parse(mSteps.get(mStepNumber).getVideoURL()));
+            // Start the video
+            mExoPlayer.setPlayWhenReady(true);
         } else {
             // Release player
             releasePlayer();

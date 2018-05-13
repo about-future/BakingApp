@@ -5,10 +5,9 @@
     android:initialLayout="@layout/ingredients_list_widget"
     android:minHeight="120dp"
     android:minWidth="200dp"
-    android:previewImage="@drawable/ic_launcher_foreground"
+    android:previewImage="@drawable/muffin"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="1800000"
     android:widgetCategory="home_screen"
-    android:configure="com.aboutfuture.bakingapp.WidgetConfigureActivity">
-
+    android:configure="com.aboutfuture.bakingapp.widget.WidgetConfigureActivity">
 </appwidget-provider>

@@ -52,9 +52,6 @@ public class RecipeDetailsActivity extends AppCompatActivity implements
     private ArrayList<Ingredient> mIngredients;
     private ArrayList<Step> mSteps;
 
-    private MasterRecipeFragment mMasterFragment;
-    private StepDetailsFragment mStepFragment;
-
     @BindString(R.string.error_message)
     String errorMsg;
 
@@ -241,7 +238,7 @@ public class RecipeDetailsActivity extends AppCompatActivity implements
 
                     FragmentManager fragmentManager = getSupportFragmentManager();
 
-                    mMasterFragment = new MasterRecipeFragment();
+                    MasterRecipeFragment mMasterFragment = new MasterRecipeFragment();
                     mMasterFragment.setIngredients(mIngredients);
                     mMasterFragment.setSteps(mSteps);
                     fragmentManager.beginTransaction()
@@ -251,7 +248,7 @@ public class RecipeDetailsActivity extends AppCompatActivity implements
                     if (findViewById(R.id.step_details_container) != null) {
                         mTwoPane = true;
 
-                        mStepFragment = new StepDetailsFragment();
+                        StepDetailsFragment mStepFragment = new StepDetailsFragment();
                         mStepFragment.setSteps(mSteps);
                         mStepFragment.hideNavigation(mTwoPane);
                         fragmentManager.beginTransaction()

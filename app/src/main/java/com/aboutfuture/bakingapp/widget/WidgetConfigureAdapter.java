@@ -1,4 +1,4 @@
-package com.aboutfuture.bakingapp;
+package com.aboutfuture.bakingapp.widget;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.aboutfuture.bakingapp.R;
 import com.aboutfuture.bakingapp.data.RecipesContract;
 
 import butterknife.BindView;

@@ -1,4 +1,4 @@
-package com.aboutfuture.bakingapp;
+package com.aboutfuture.bakingapp.widget;
 
 import android.appwidget.AppWidgetManager;
 import android.content.Intent;
@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
+import com.aboutfuture.bakingapp.R;
 import com.aboutfuture.bakingapp.data.RecipesContract;
 
 import butterknife.BindView;
