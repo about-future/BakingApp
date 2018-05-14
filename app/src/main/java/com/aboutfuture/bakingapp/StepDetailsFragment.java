@@ -130,6 +130,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                 }
 
                 // Set video or thumbnail and step description
+                mVideoPosition = 0;
                 setStepContent();
             }
         });
@@ -150,6 +151,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
                 }
 
                 // Set video or thumbnail and step description
+                mVideoPosition = 0;
                 setStepContent();
             }
         });
@@ -180,6 +182,15 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
         DataSource.Factory factory = new DefaultDataSourceFactory(context, userAgent);
         MediaSource mediaSource = new ExtractorMediaSource.Factory(factory).createMediaSource(mediaUri);
         mExoPlayer.prepare(mediaSource);
+
+        // Resume playing state and playing position
+        if (mVideoPosition != 0) {
+            mExoPlayer.seekTo(mVideoPosition);
+            mExoPlayer.setPlayWhenReady(mVideoPlayingState);
+        } else {
+            // Otherwise, if position is 0, the video never played and should start by default
+            mExoPlayer.setPlayWhenReady(true);
+        }
     }
 
     private void initializeMediaSession(Context context) {
@@ -226,7 +237,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
         if (mExoPlayer != null) {
             mVideoPlayingState = mExoPlayer.getPlayWhenReady();
             mVideoPosition = mExoPlayer.getCurrentPosition();
-            mExoPlayer.setPlayWhenReady(false);
+            releasePlayer();
         }
     }
 
@@ -234,15 +245,8 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
     public void onResume() {
         super.onResume();
 
-        if (mExoPlayer != null) {
-            // Resume playing state and playing position
-            if (mVideoPosition != 0) {
-                mExoPlayer.seekTo(mVideoPosition);
-                mExoPlayer.setPlayWhenReady(mVideoPlayingState);
-            } else {
-                // Otherwise, if position is 0, the video never played and should start by default
-                mExoPlayer.setPlayWhenReady(true);
-            }
+        if (!TextUtils.isEmpty(mSteps.get(mStepNumber).getVideoURL())) {
+            initializePlayer(getContext(), Uri.parse(mSteps.get(mStepNumber).getVideoURL()));
         }
     }
 
@@ -250,7 +254,7 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
     public void onSaveInstanceState(@NonNull Bundle outState) {
         outState.putParcelableArrayList(RecipesActivity.RECIPE_STEPS_KEY, mSteps);
         outState.putInt(RecipesActivity.NUMBER_STEP_KEY, mStepNumber);
-        if (mExoPlayer != null) {
+        if (!TextUtils.isEmpty(mSteps.get(mStepNumber).getVideoURL())) {
             outState.putLong(VIDEO_POSITION_KEY, mVideoPosition);
             outState.putBoolean(VIDEO_PLAYING_STATE_KEY, mVideoPlayingState);
         }
@@ -261,19 +265,12 @@ public class StepDetailsFragment extends Fragment implements Player.EventListene
     @Override
     public void onDestroy() {
         super.onDestroy();
-        releasePlayer();
         mMediaSession.setActive(false);
     }
 
     private void setStepContent() {
         // Set step description
         descriptionTextView.setText(mSteps.get(mStepNumber).getDescription());
-
-        // Stop player and reset video position
-        if (mExoPlayer != null) {
-            mVideoPosition = 0;
-            mExoPlayer.stop();
-        }
 
         if (!TextUtils.isEmpty(mSteps.get(mStepNumber).getVideoURL())) {
             // Show player

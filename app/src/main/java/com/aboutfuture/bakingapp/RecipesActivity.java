@@ -38,7 +38,6 @@ public class RecipesActivity extends AppCompatActivity implements
     private static final int RECIPES_LOADER_ID = 534;
     private static final int DATABASE_LOADER_ID = 316;
     private static final String RECIPES_LIST_KEY = "recipes_list";
-    private static final String POSITION_KEY = "current_position";
 
     public static final String RECIPE_ID_KEY = "recipe_id";
     public static final String RECIPE_NAME_KEY = "recipe_name";
@@ -59,7 +58,6 @@ public class RecipesActivity extends AppCompatActivity implements
     private int mPosition = RecyclerView.NO_POSITION;
 
     private ArrayList<Recipe> mRecipes;
-    private Bundle mBundleState;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,7 +84,6 @@ public class RecipesActivity extends AppCompatActivity implements
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putParcelableArrayList(RECIPES_LIST_KEY, mRecipes);
-        outState.putInt(POSITION_KEY, mGridLayoutManager.findFirstVisibleItemPosition());
 
         super.onSaveInstanceState(outState);
     }
@@ -96,39 +93,13 @@ public class RecipesActivity extends AppCompatActivity implements
         if (savedInstanceState != null) {
             if (savedInstanceState.containsKey(RECIPES_LIST_KEY)) {
                 mRecipes = savedInstanceState.getParcelableArrayList(RECIPES_LIST_KEY);
-
                 if (mRecipes != null) {
                     showRecipes();
                     mRecipesAdapter.swapRecipes(mRecipes);
                 }
             }
-
-            if (savedInstanceState.containsKey(POSITION_KEY)) {
-                mPosition = savedInstanceState.getInt(POSITION_KEY);
-                if (mPosition == RecyclerView.NO_POSITION) {
-                    mPosition = 0;
-                }
-                mRecipesRecyclerView.smoothScrollToPosition(mPosition);
-            }
         }
         super.onRestoreInstanceState(savedInstanceState);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        mBundleState = new Bundle();
-        mBundleState.putParcelable(POSITION_KEY, mGridLayoutManager.onSaveInstanceState());
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        if (mBundleState != null) {
-            if (mBundleState.containsKey(POSITION_KEY))
-                mGridLayoutManager.onRestoreInstanceState(mBundleState.getParcelable(POSITION_KEY));
-        }
     }
 
     // Fetch data or show connection error
