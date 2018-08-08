@@ -4,6 +4,15 @@
 Productionize an app, taking it from a functional state to a production-ready state. This involves finding and handling error cases,
 adding accessibility features, allowing for localization, adding a widget, and adding a library.
 
+### Sample Mocks
+Phone |
+--- |
+![Phone Mocks](/screenshots/baking_phone_mocks.png) |
+
+Tablet |
+--- |
+![Tablet Mocks](/screenshots/baking_tablet_mocks.png) |
+
 ### Why this Project?
 As a working Android developer, we often have to create and implement apps where we are responsible for designing and planning 
 the steps we need to take to create a production-ready app. Unlike Best Movies where we had an implementation guide,
