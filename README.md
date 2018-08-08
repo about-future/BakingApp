@@ -38,7 +38,7 @@ Phone |
 
 Tablet |
 --- |
-![Phone](/screenshots/baking_app_recipeecipe.png) |
+![Tablet](/screenshots/baking_app_recipeecipe_tablet.png) |
 
 Widget |
 --- |
