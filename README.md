@@ -34,11 +34,11 @@ it will be up to us to figure things out for the Baking App.
 ### Screen Shots
 Phone |
 --- |
-![Phone](/screenshots/baking_app_recipeecipe.png) |
+![Phone](/screenshots/baking_app_phone.jpg) |
 
 Tablet |
 --- |
-![Tablet](/screenshots/baking_app_recipeecipe_tablet.png) |
+![Tablet](/screenshots/baking_app_tablet.jpg) |
 
 Widget |
 --- |
